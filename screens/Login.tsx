@@ -78,7 +78,7 @@ export default function Login() {
             createTwoButtonAlert('Error', 'Antes de ingresar debe reportar su presencia');
         } else {
             const navigateTo: string = puntoMuestral.idTipo === tiposPuntosMuestrales.TD ? `home` : `reportes`;
-            navigation.navigate(__DEV__ ? 'reportes' : navigateTo, { puntoMuestralId: puntoMuestral.id });
+            navigation.navigate((__DEV__ && false) ? 'reportes' : navigateTo, { puntoMuestralId: puntoMuestral.id });
         }
 
     };
@@ -137,6 +137,7 @@ const styles = StyleSheet.create({
         // backgroundColor: 'gold',
     },
 
+    /** Input numerico */
     inputStyle: {
         fontSize: 35,
         textAlign: 'center',

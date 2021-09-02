@@ -18,9 +18,8 @@ export default function Reports() {
     const route = useRoute();
     const navigation = useNavigation();
     const params: any = route.params;
-    const puntoMuestralId: string = params.puntoMuestralId;
-    const [language, setLanguage] = React.useState("");
-
+    const [puntoMuestralId, setPuntoMuestralId] = React.useState<string>();
+    const [spinner, setSpinner] = React.useState<boolean>(false);
     const [showFiltros, setShowFiltros] = React.useState<boolean>(false);
 
     /** Listas de Datos */
@@ -37,6 +36,17 @@ export default function Reports() {
     const [porcentajeMax, setPorcentajeMax] = React.useState<number>(50);
 
     // console.log('params', params, puntoMuestralId);
+
+    React.useEffect(() => {
+        console.log('params', params, puntoMuestralId);
+        if (!params) return
+        setPuntoMuestralId(params?.puntoMuestralId);
+    }, [params]);
+
+    React.useEffect(() => {
+        console.log('puntoMuestralId', puntoMuestralId);
+        if (!puntoMuestralId) return
+    }, [puntoMuestralId]);
 
     React.useEffect(() => {
         getAllCategorias();
@@ -110,10 +120,10 @@ export default function Reports() {
 
                 <View style={styles.selectContainer}>
                     <Select
-                        selectedValue={language}
                         minWidth={200}
                         placeholder="Seleccione una categoría"
-                        onValueChange={(itemValue) => setLanguage(itemValue)}
+                        selectedValue={categoria ? `${categoria?.id}` : undefined}
+                        onValueChange={(itemValue: string) => setCategoria(categorias.find((e: Categoria) => `${e.id}` === itemValue))}
                         _selectedItem={{ bg: "cyan.600", endIcon: <CheckIcon size={4} />, }}
                     >
                         {/* {categoria !== '' ? <Select.Item label={'Todos'} value={''} /> : null} */}
@@ -126,10 +136,10 @@ export default function Reports() {
 
                 <View style={styles.selectContainer}>
                     <Select
-                        selectedValue={language}
                         minWidth={200}
                         placeholder="Filtrar por mesa"
-                        onValueChange={(itemValue) => setLanguage(itemValue)}
+                        selectedValue={mesa ? `${mesa?.id}` : undefined}
+                        onValueChange={(itemValue: string) => setMesa(mesas.find((e: Mesa) => `${e.id}` === itemValue))}
                         _selectedItem={{ bg: "cyan.600", endIcon: <CheckIcon size={4} />, }}
                     >
                         <Select.Item label="JavaScript" value="js" />
@@ -164,7 +174,7 @@ export default function Reports() {
                             </View>
 
                             <View style={{ width: '100%', marginVertical: 5 }}>
-                                <LinearProgress color="primary" value={elem.porcentaje / porcentajeMax} variant='determinate' trackColor='#ddd' />
+                                <LinearProgress color={"primary"} value={elem.porcentaje / porcentajeMax} variant='determinate' trackColor='#ddd' />
                             </View>
                         </View>
                     )}
@@ -200,11 +210,10 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
 
+    /** Avatar */
     listaContainer: {
         marginBottom: 20,
     },
-
-    /** Avatar */
     avatarContainer: {
         flexDirection: 'row',
         alignItems: 'center',

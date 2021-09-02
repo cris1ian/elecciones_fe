@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import * as React from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import { Platform, StyleSheet, ScrollView, TextInput } from 'react-native';
 
 import EditScreenInfo from '../components/EditScreenInfo';
 import { Text, View } from '../components/Themed';
@@ -10,90 +10,261 @@ import { Button } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
+import { Avatar } from 'react-native-elements';
+import { LinearProgress } from 'react-native-elements';
+
+import * as authService from '../services/auth.service';
+import { Mesa } from '../models/mesa.model';
+import { Categoria } from '../models/categoria.model';
+import { Candidato } from '../models/candidato.model';
+import { MesaCandidato } from '../models/mesa-candidato.model';
+// import { Input } from 'native-base';
+import { Input } from 'react-native-elements';
+import { createTwoButtonAlert } from '../utils/AlertsScreens';
+import { validarDatos } from '../utils/ValidarDatos';
+
 export default function Home() {
     const route = useRoute();
     const navigation = useNavigation();
     const params: any = route.params;
-    const puntoMuestralId: string = params.puntoMuestralId;
-    const [language, setLanguage] = React.useState("")
+    const [spinner, setSpinner] = React.useState<boolean>(false);
 
-    console.log('params', params, puntoMuestralId);
+    const [puntoMuestralId, setPuntoMuestralId] = React.useState<string>();
+
+    /** Listas de Datos */
+    const [mesas, setMesas] = React.useState<Mesa[]>([]);
+    const [categorias, setCategorias] = React.useState<Categoria[]>([]);
+    const [mesasCandidatos, setMesasCandidatos] = React.useState<MesaCandidato[]>([]);
+
+    const [mesa, setMesa] = React.useState<Mesa>();
+    const [categoria, setCategoria] = React.useState<any>();
+    const [fileCaptura, setFileCaptura] = React.useState<any>(null);
+
+    React.useEffect(() => {
+        console.log('params', params, puntoMuestralId);
+        if (!params) return
+        setPuntoMuestralId(params?.puntoMuestralId);
+    }, [params]);
+
+    React.useEffect(() => {
+        console.log('puntoMuestralId', puntoMuestralId);
+        if (!puntoMuestralId) return
+        getMesasByPuntoMuestral();
+    }, [puntoMuestralId]);
+
+    React.useEffect(() => {
+        console.log('mesa', mesa);
+        if (!mesa) return
+        onChangeMesa(mesa)
+    }, [mesa]);
+
+    React.useEffect(() => {
+        console.log('categoria', categoria);
+        if (!categoria) return
+        onChangeCategoria(categoria)
+    }, [categoria, mesa]);
+
+    const clearAll = (excepMesa = false) => {
+        setMesasCandidatos([]);
+        setCategorias([]);
+        setFileCaptura(undefined)
+        setCategoria(undefined);
+        if (!excepMesa) setMesa(undefined);
+    }
+
+    const getMesasByPuntoMuestral = async () => {
+        if (puntoMuestralId === undefined) return console.log('puntoMuestralId === undefined', puntoMuestralId, puntoMuestralId === undefined);
+        let resp: Mesa[] | undefined;
+        try {
+            resp = await authService.getMesasByPuntoMuestral(+puntoMuestralId);
+        } catch (error) {
+            console.log(error);
+            return
+        }
+        if (!resp) return console.log('!resp', resp, !resp);
+        setMesas(resp);
+    }
+
+    const onChangeMesa = async (m: Mesa) => {
+        if (puntoMuestralId === undefined) return console.log('puntoMuestralId === undefined', puntoMuestralId, puntoMuestralId === undefined);
+        clearAll(true);
+        let resp: Categoria[] | undefined;
+        try {
+            resp = await authService.getCategoriasByMesaAndPuntoMuestral(+puntoMuestralId, m);
+        } catch (error) {
+            console.log(error);
+            return
+        }
+        if (!resp) return console.log('!resp', resp, !resp);
+        console.log('setCategorias', resp);
+        setCategorias(resp);
+    }
+
+    /**
+     * Cargo los candidatos de la categoria seleccionada
+     * Me creo las nuevas mesasCandidatos que voy a mandar
+     */
+    const onChangeCategoria = async (c: Categoria) => {
+        console.log('onChangeCategoria');
+        if (mesa === undefined) return console.log('mesa === undefined', mesa, mesa === undefined);
+
+        let resp: Candidato[] | undefined;
+        try {
+            resp = await authService.getCandidatosByCategoria(c.id);
+        } catch (error) {
+            console.log(error);
+            return
+        }
+        if (!resp) return console.log('!resp', resp, !resp);
+        const _sortedCandidatos: Candidato[] = resp.sort((a: Candidato, b: Candidato) => a.candidatoTipo - b.candidatoTipo);
+        const _mesasCandidatos: MesaCandidato[] = _sortedCandidatos.map((c: Candidato) => new MesaCandidato({ mesa: mesa, candidato: c }));
+        console.log('setMesasCandidatos', resp, _sortedCandidatos, _mesasCandidatos);
+        setMesasCandidatos(_mesasCandidatos);
+    }
+
+    /** Estaba desabilitado el botón en la APP v1 Ionic*/
+    const onClickFoto = async () => {
+        // this.cameraService.takePictureAndReturnFile()
+        //     .then(
+        //         (f) => this.fileCaptura = f
+        //     )
+    }
+
+    const onClickConfirmar = async () => {
+        // Valido datos
+        const datosValidos: boolean = validarDatos(mesasCandidatos);
+        if (!datosValidos) return console.log('Datos no válidos', datosValidos);
+
+        if (mesa === undefined) return console.log('mesa === undefined', mesa, mesa === undefined);
+
+        let resp: any | undefined;
+        try {
+            setSpinner(true);
+            resp = await authService.postMesasCandidatos(mesasCandidatos, fileCaptura, mesa, categoria)
+        } catch (error) {
+            console.log(error);
+            setSpinner(false);
+            return
+        }
+        setSpinner(false);
+        if (!resp) return console.log('!resp', resp, !resp);
+        clearAll();
+
+    }
 
     return (
-        <View style={styles.container}>
+        <View style={{ flex: 1 }}>
+            <ScrollView contentContainerStyle={styles.container}>
 
-            <View style={styles.mainBlock}>
-                <Text style={styles.title}>Seleccione mesa y categoria</Text>
+                <View style={styles.mainBlock}>
+                    <Text style={styles.title}>Seleccione mesa y categoria</Text>
 
-                {/* <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" /> */}
+                    {/* <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" /> */}
 
-                <View style={styles.selectContainer}>
-                    <Select
-                        selectedValue={language}
-                        minWidth={200}
-                        placeholder="Seleccione una mesa"
-                        onValueChange={(itemValue) => setLanguage(itemValue)}
-                        _selectedItem={{
-                            bg: "cyan.600",
-                            endIcon: <CheckIcon size={4} />,
-                        }}
-                    >
-                        <Select.Item label="JavaScript" value="js" />
-                        <Select.Item label="TypeScript" value="ts" />
-                        <Select.Item label="C" value="c" />
-                        <Select.Item label="Python" value="py" />
-                        <Select.Item label="Java" value="java" />
-                    </Select>
+                    <View style={styles.selectContainer}>
+                        <Select
+                            selectedValue={mesa && `${mesa?.id}`}
+                            minWidth={200}
+                            placeholder="Seleccione una mesa"
+                            onValueChange={(itemValue: string) => setMesa(mesas.find((e: Mesa) => `${e.id}` === itemValue))}
+                            _selectedItem={{ bg: "cyan.600", endIcon: <CheckIcon size={4} />, }}
+                        >
+                            {/* {mesas !== '' ? <Select.Item label={'Todos'} value={''} /> : null} */}
+                            {mesas.map((elem: Mesa, index: number) =>
+                                <Select.Item key={index} label={elem.descripcion} value={`${elem.id}`} />
+                            )}
+                        </Select>
+                    </View>
+
+                    <View style={styles.selectContainer}>
+                        <Select
+                            selectedValue={categoria ? `${categoria?.id}` : undefined}
+                            minWidth={200}
+                            placeholder="Seleccione una categoría"
+                            onValueChange={(itemValue: string) => setCategoria(categorias.find((e: Categoria) => `${e.id}` === itemValue))}
+                            _selectedItem={{ bg: "cyan.600", endIcon: <CheckIcon size={4} />, }}
+                        >
+                            {/* {categorias !== '' ? <Select.Item label={'Todos'} value={''} /> : null} */}
+                            {categorias.map((elem: Categoria, index: number) =>
+                                <Select.Item key={index} label={elem.descripcion} value={`${elem.id}`} />
+                            )}
+                        </Select>
+                    </View>
+
+                    <Text style={styles.title}>Ingrese cantidad de votos</Text>
+
+                    {mesasCandidatos.map((elem: MesaCandidato, index: number) => {
+                        const setCantidadVotos = (value: string) => {
+                            const _editedMesaCandidato: MesaCandidato = { ...elem, cantidadVotos: +value };
+                            const _editedMesasCandidatos: MesaCandidato[] = mesasCandidatos.map((e: MesaCandidato) => e.candidato.id === elem.candidato.id ? _editedMesaCandidato : e);
+                            setMesasCandidatos(_editedMesasCandidatos);
+                        };
+
+                        return (
+                            <View style={[styles.listaContainer, { backgroundColor: elem.candidato.color }]} key={index}>
+                                <View style={styles.avatarContainer}>
+
+                                    <Avatar
+                                        rounded
+                                        size="medium"
+                                        title={elem.candidato.nombre.substr(0, elem.candidato.nombre.indexOf('-'))}
+                                        titleStyle={{ color: 'black', fontSize: 20, fontWeight: 'bold', }}
+                                        source={{ uri: elem.candidato.urlimagen, }}
+                                    />
+
+                                    <View style={styles.avatarCenter}>
+                                        <Text style={styles.avatarText1}>{elem.candidato.nombre}</Text>
+                                    </View>
+
+                                    <View style={styles.avatarRight}>
+                                        <TextInput
+                                            placeholder="0"
+                                            style={styles.inputStyle}
+                                            value={elem.cantidadVotos ? `${elem.cantidadVotos}` : undefined}
+                                            onChangeText={value => setCantidadVotos(value)}
+                                            keyboardType="numeric"
+                                        />
+                                    </View>
+
+                                </View>
+
+                                {/* <View style={{ width: '100%', marginVertical: 5 }}>
+                                <LinearProgress color="primary" value={elem.porcentaje / porcentajeMax} variant='determinate' trackColor='#ddd' />
+                            </View> */}
+                            </View>
+                        )
+                    })}
+
+                    <Text style={styles.title}>Saque una foto de la planilla {'\n'} (opcional)</Text>
+
+                    <View style={styles.subContainer}>
+                        <Button buttonStyle={styles.cameraButton} disabled={true} icon={<Icon name="camera" size={35} color="white" />} onPress={onClickFoto} />
+                    </View>
+
                 </View>
 
-                <View style={styles.selectContainer}>
-                    <Select
-                        selectedValue={language}
-                        minWidth={200}
-                        placeholder="Seleccione una categoría"
-                        onValueChange={(itemValue) => setLanguage(itemValue)}
-                        _selectedItem={{
-                            bg: "cyan.600",
-                            endIcon: <CheckIcon size={4} />,
-                        }}
-                    >
-                        <Select.Item label="JavaScript" value="js" />
-                        <Select.Item label="TypeScript" value="ts" />
-                        <Select.Item label="C" value="c" />
-                        <Select.Item label="Python" value="py" />
-                        <Select.Item label="Java" value="java" />
-                    </Select>
-                </View>
-
-                <Text style={styles.title}>Saque una foto de la planilla {'\n'} (opcional)</Text>
-
-                <View style={styles.subContainer}>
-                    <Button buttonStyle={styles.cameraButton}
-                        icon={<Icon name="camera" size={35} color="white" />}
-                    />
-                </View>
-            </View>
-
-            <View style={styles.mainBlock}>
-                <View style={styles.subContainer}>
-                    <View style={styles.buttonContainer}>
-                        <Button buttonStyle={styles.buttonStyle} title="Confirmar" />
+                <View style={styles.mainBlock}>
+                    <View style={styles.subContainer}>
+                        <View style={styles.buttonContainer}>
+                            <Button buttonStyle={styles.buttonStyle} title="Confirmar" disabled={spinner} loading={spinner} onPress={onClickConfirmar} />
+                        </View>
                     </View>
                 </View>
-            </View>
 
-            {/* Use a light status bar on iOS to account for the black space above the modal */}
-            <StatusBar style={Platform.OS === 'ios' ? 'light' : 'auto'} />
-        </View >
+                {/* Use a light status bar on iOS to account for the black space above the modal */}
+                <StatusBar style={Platform.OS === 'ios' ? 'light' : 'auto'} />
+            </ScrollView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
+        // flex: 1,
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: '15%',
+        paddingHorizontal: '5%',
+        paddingTop: '5%',
     },
     mainBlock: {
         width: '100%',
@@ -101,7 +272,7 @@ const styles = StyleSheet.create({
     },
 
     selectContainer: {
-        marginBottom: 30,
+        marginBottom: 10,
     },
 
     /** Camera Button */
@@ -117,6 +288,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
         alignItems: 'center',
         marginHorizontal: '10%',
+        marginBottom: 20,
         // backgroundColor: 'gold',
     },
     buttonContainer: {
@@ -129,10 +301,11 @@ const styles = StyleSheet.create({
         // backgroundColor: 'red',
     },
 
+    /** Titulos de secciones */
     title: {
         fontSize: 20,
         fontWeight: 'bold',
-        marginVertical: 30,
+        marginVertical: 20,
         textAlign: 'center',
     },
     separator: {
@@ -140,4 +313,45 @@ const styles = StyleSheet.create({
         height: 1,
         width: '80%',
     },
+
+
+    /** Avatar */
+    listaContainer: {
+        marginBottom: 20,
+        borderRadius: 90,
+    },
+    avatarContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'transparent',
+    },
+    avatar: {
+        // backgroundColor: 'green',
+    },
+    avatarCenter: {
+        flex: 1,
+        paddingLeft: 10,
+        backgroundColor: 'transparent',
+        // backgroundColor: 'purple',
+    },
+    avatarText1: {
+        fontSize: 15,
+        // backgroundColor: 'lime',
+    },
+
+    avatarRight: {
+        width: 100,
+        paddingRight: 20,
+        justifyContent: 'center',
+        // backgroundColor: 'green',
+        backgroundColor: 'transparent',
+    },
+    inputStyle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        textAlign: 'right',
+        textAlignVertical: 'center',
+        // backgroundColor: 'gold',
+    },
+
 });

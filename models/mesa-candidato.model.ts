@@ -4,7 +4,7 @@ import { Candidato } from './candidato.model';
 export class MesaCandidato {
     mesa: Mesa;
     candidato: Candidato;
-    cantidadVotos: number;
+    cantidadVotos: number | null;
 
     constructor(mesaCandidato: {
         mesa: Mesa,
@@ -13,6 +13,6 @@ export class MesaCandidato {
     }) {
         this.mesa = mesaCandidato.mesa;
         this.candidato = mesaCandidato.candidato;
-        this.cantidadVotos = mesaCandidato.cantidadVotos ? mesaCandidato.cantidadVotos : null; 
+        this.cantidadVotos = mesaCandidato.cantidadVotos ? mesaCandidato.cantidadVotos : null;
     }
 }
