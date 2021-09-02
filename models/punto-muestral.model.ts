@@ -1,3 +1,13 @@
+export interface PuntoMuestralRaw {
+    id: number,
+    comportamiento: string,
+    id_circuito: string,
+    celular: string,
+    peso: number,
+    id_tipo: number,
+    registro_ingreso: boolean
+}
+
 export class PuntoMuestral {
     id: number;
     comportamiento: string;
@@ -8,8 +18,8 @@ export class PuntoMuestral {
     registroIngreso: boolean;
 
 
-    constructor(private puntoMuestral: { 
-        id: number, 
+    constructor(private puntoMuestral: {
+        id: number,
         comportamiento: string,
         id_circuito: string,
         celular: string,

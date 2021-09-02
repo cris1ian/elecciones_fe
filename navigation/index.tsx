@@ -60,12 +60,12 @@ function BottomTabNavigator() {
     const colorScheme = useColorScheme();
 
     return (
-        <BottomTab.Navigator initialRouteName="TabOne"
+        <BottomTab.Navigator initialRouteName="login"
             screenOptions={{
                 tabBarActiveTintColor: Colors[colorScheme].tint,
             }}>
             <BottomTab.Screen
-                name="Home"
+                name="login"
                 component={Login}
                 options={{
                     title: 'Ingreso',
@@ -73,14 +73,14 @@ function BottomTabNavigator() {
                 }}
             />
             <BottomTab.Screen
-                name="Reports"
+                name="home"
                 component={Home}
                 options={{
                     title: 'Ingreso resultados',
                     tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
                 }}
             />
-            <BottomTab.Screen
+            {/* <BottomTab.Screen
                 name="TabOne"
                 component={Reports}
                 options={({ navigation }: RootTabScreenProps<'TabOne'>) => ({
@@ -100,7 +100,7 @@ function BottomTabNavigator() {
                         </Pressable>
                     ),
                 })}
-            />
+            /> */}
         </BottomTab.Navigator>
     );
 }
