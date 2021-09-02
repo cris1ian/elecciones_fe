@@ -14,13 +14,13 @@ import { Categoria } from '../models/categoria.model';
 import { Resultado } from '../models/resultado.model';
 import * as authService from '../services/auth.service';
 
+import { SearchBar } from 'react-native-elements';
+import { createTwoButtonAlert } from '../utils/AlertsScreens';
+
 export default function Reports() {
-    const route = useRoute();
-    const navigation = useNavigation();
-    const params: any = route.params;
-    const [puntoMuestralId, setPuntoMuestralId] = React.useState<string>();
     const [spinner, setSpinner] = React.useState<boolean>(false);
     const [showFiltros, setShowFiltros] = React.useState<boolean>(false);
+    const [mesasFilter, setMesasFilter] = React.useState<string>('');
 
     /** Listas de Datos */
     const [mesas, setMesas] = React.useState<Mesa[]>([]);
@@ -38,20 +38,26 @@ export default function Reports() {
     // console.log('params', params, puntoMuestralId);
 
     React.useEffect(() => {
-        console.log('params', params, puntoMuestralId);
-        if (!params) return
-        setPuntoMuestralId(params?.puntoMuestralId);
-    }, [params]);
-
-    React.useEffect(() => {
-        console.log('puntoMuestralId', puntoMuestralId);
-        if (!puntoMuestralId) return
-    }, [puntoMuestralId]);
-
-    React.useEffect(() => {
         getAllCategorias();
         getAllMesas();
     }, []);
+
+    React.useEffect(() => {
+        if (mesasFilter === '') return console.log('mesasFilter === \'\'', mesasFilter);
+        /** Armar un debounce */
+        onClickBuscarPorMesa();
+    }, [mesasFilter]);
+
+    const onClickBuscarPorMesa = () => {
+        const value: string = mesasFilter;
+
+        const _mesa: Mesa | undefined = mesas.find(m => m.descripcion === value);
+        setMesa(_mesa);
+
+        if (!mesa) return createTwoButtonAlert('Error', `Mesa no encontrada`);
+        refrescarLista();
+    }
+
 
     React.useEffect(() => {
         console.log('resultados', resultados);
@@ -134,7 +140,7 @@ export default function Reports() {
                 </View>
 
 
-                <View style={styles.selectContainer}>
+                {/* <View style={styles.selectContainer}>
                     <Select
                         minWidth={200}
                         placeholder="Filtrar por mesa"
@@ -148,6 +154,18 @@ export default function Reports() {
                         <Select.Item label="Python" value="py" />
                         <Select.Item label="Java" value="java" />
                     </Select>
+                </View> */}
+
+                <View style={styles.selectContainer}>
+                    <SearchBar
+                        placeholder="Filtrar por mesa"
+                        onChangeText={(value) => setMesasFilter(value)}
+                        value={mesasFilter}
+                        lightTheme
+                        round
+                        containerStyle={{ backgroundColor: 'transparent', borderBottomWidth: 0, borderTopWidth: 0, }}
+                        inputContainerStyle={{ backgroundColor: '#ddd5', }}
+                    />
                 </View>
 
                 <ScrollView style={{ flex: 1 }}>
