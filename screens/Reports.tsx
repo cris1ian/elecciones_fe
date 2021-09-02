@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import * as React from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import { Platform, StyleSheet, ScrollView } from 'react-native';
 
 import { Text, View } from '../components/Themed';
 
@@ -8,9 +8,100 @@ import { Avatar } from 'react-native-elements';
 
 import { Select, CheckIcon } from 'native-base';
 import { LinearProgress } from 'react-native-elements';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { Mesa } from '../models/mesa.model';
+import { Categoria } from '../models/categoria.model';
+import { Resultado } from '../models/resultado.model';
+import * as authService from '../services/auth.service';
 
 export default function Reports() {
-    const [language, setLanguage] = React.useState("")
+    const route = useRoute();
+    const navigation = useNavigation();
+    const params: any = route.params;
+    const puntoMuestralId: string = params.puntoMuestralId;
+    const [language, setLanguage] = React.useState("");
+
+    const [showFiltros, setShowFiltros] = React.useState<boolean>(false);
+
+    /** Listas de Datos */
+    const [mesas, setMesas] = React.useState<Mesa[]>([]);
+    const [categorias, setCategorias] = React.useState<Categoria[]>([]);
+
+    /** Datos Seleccionados */
+    const [mesa, setMesa] = React.useState<Mesa>();
+    const [categoria, setCategoria] = React.useState<Categoria>();
+
+    /** Resultados */
+    const [resultados, setResultados] = React.useState<Resultado[]>([]);
+    const [puntosInformadosMsg, setPuntosInformadosMsg] = React.useState<string>('');
+    const [porcentajeMax, setPorcentajeMax] = React.useState<number>(50);
+
+    // console.log('params', params, puntoMuestralId);
+
+    React.useEffect(() => {
+        getAllCategorias();
+        getAllMesas();
+    }, []);
+
+    React.useEffect(() => {
+        console.log('resultados', resultados);
+        if (resultados.length < 1) return;
+        const maxValue: number = Math.max(...resultados.map(e => e.porcentaje));
+        console.log('maxValue', maxValue);
+        setPorcentajeMax(maxValue)
+    }, [resultados]);
+
+    const getAllCategorias = async () => {
+        let resp;
+        try {
+            resp = await authService.getAllCategorias();
+        } catch (error) {
+            console.log(error);
+            return
+        }
+        if (!resp) return;
+        setCategorias(resp);
+
+        // Categoria por defecto gobernador
+        if (resp.length > 0) setCategoria(resp[0]);
+        refrescarLista();
+    }
+
+    const getAllMesas = async () => {
+        let resp;
+        try {
+            resp = await authService.getAllMesas();
+        } catch (error) {
+            console.log(error);
+            return
+        }
+        if (!resp) return;
+        setMesas(resp);
+    }
+
+    const refrescarLista = async () => {
+        let resp: string | undefined;
+        try {
+            resp = await authService.getPuntosInformados(categoria ? categoria.id : 0)
+        } catch (error) {
+            console.log(error);
+            return
+        }
+        if (!resp) return;
+        setPuntosInformadosMsg(resp);
+
+        let resp2;
+        try {
+            resp2 = await authService.getResultados(categoria ? categoria.id : 0, mesa ? mesa.id : 0);
+        } catch (error) {
+            console.log(error);
+            return
+        }
+        if (!resp2) return;
+        // console.log('setResultados', resp2);
+        const resultadosOrdenados: Resultado[] = resp2.sort((a, b) => a.porcentaje > b.porcentaje ? -1 : 1);
+        setResultados([...resultadosOrdenados, ...resultadosOrdenados, ...resultadosOrdenados]);
+    };
 
     return (
         <View style={styles.container}>
@@ -23,16 +114,12 @@ export default function Reports() {
                         minWidth={200}
                         placeholder="Seleccione una categoría"
                         onValueChange={(itemValue) => setLanguage(itemValue)}
-                        _selectedItem={{
-                            bg: "cyan.600",
-                            endIcon: <CheckIcon size={4} />,
-                        }}
+                        _selectedItem={{ bg: "cyan.600", endIcon: <CheckIcon size={4} />, }}
                     >
-                        <Select.Item label="JavaScript" value="js" />
-                        <Select.Item label="TypeScript" value="ts" />
-                        <Select.Item label="C" value="c" />
-                        <Select.Item label="Python" value="py" />
-                        <Select.Item label="Java" value="java" />
+                        {/* {categoria !== '' ? <Select.Item label={'Todos'} value={''} /> : null} */}
+                        {categorias.map((elem: Categoria, index: number) =>
+                            <Select.Item key={index} label={elem.descripcion} value={`${elem.id}`} />
+                        )}
                     </Select>
                 </View>
 
@@ -43,10 +130,7 @@ export default function Reports() {
                         minWidth={200}
                         placeholder="Filtrar por mesa"
                         onValueChange={(itemValue) => setLanguage(itemValue)}
-                        _selectedItem={{
-                            bg: "cyan.600",
-                            endIcon: <CheckIcon size={4} />,
-                        }}
+                        _selectedItem={{ bg: "cyan.600", endIcon: <CheckIcon size={4} />, }}
                     >
                         <Select.Item label="JavaScript" value="js" />
                         <Select.Item label="TypeScript" value="ts" />
@@ -56,40 +140,41 @@ export default function Reports() {
                     </Select>
                 </View>
 
-                {/* <Text style={styles.title}>Seleccione mesa y categoria</Text> */}
+                <ScrollView style={{ flex: 1 }}>
+                    {resultados.map((elem: Resultado, index: number) =>
+                        <View style={styles.listaContainer} key={index}>
+                            <View style={styles.avatarContainer}>
 
-                {/* <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" /> */}
+                                <Avatar
+                                    rounded
+                                    size="medium"
+                                    title={elem.candidatoNombre}
+                                    source={{ uri: elem.urlImagen, }}
+                                />
 
-                {/* <Text style={styles.title}>Saque una foto de la planilla {'\n'} (opcional)</Text> */}
-                <View>
-                    <View style={styles.avatarContainer}>
+                                <View style={styles.avatarCenter}>
+                                    <Text style={styles.avatarText1}>{elem.candidatoNombre}</Text>
+                                    <Text style={styles.avatarText2}>{elem.proyectados}</Text>
+                                </View>
 
-                        <Avatar
-                            rounded
-                            size="medium"
-                            title='Frente de TodOs'
-                            source={{ uri: 'https://organicthemes.com/demo/profile/files/2018/05/profile-pic.jpg', }}
-                        />
+                                <View style={styles.avatarRight}>
+                                    <Text style={styles.avatarText3}>{elem.porcentaje}%</Text>
+                                </View>
 
-                        <View style={styles.avatarCenter}>
-                            <Text style={styles.avatarText1}>{'131-Frente Federal Nos'}</Text>
-                            <Text style={styles.avatarText2}>{'22712 votos'}</Text>
+                            </View>
+
+                            <View style={{ width: '100%', marginVertical: 5 }}>
+                                <LinearProgress color="primary" value={elem.porcentaje / porcentajeMax} variant='determinate' trackColor='#ddd' />
+                            </View>
                         </View>
+                    )}
+                </ScrollView>
 
-                        <View style={styles.avatarRight}>
-                            <Text style={styles.avatarText3}>{'99.99%'}</Text>
-                        </View>
-
-                    </View>
-
-                    <View style={{ width: '100%', marginVertical: 5 }}>
-                        <LinearProgress color="primary" value={0.45} variant='determinate' trackColor='transparent' />
-                    </View>
-                </View>
             </View>
 
             <View style={styles.mainBlock}>
-                <Text style={styles.footerInfo}>Muestras informadas: {93} / {146}</Text>
+                <Text style={styles.footerInfo}>puntosInformadosMsg: {puntosInformadosMsg}</Text>
+                {/* <Text style={styles.footerInfo}>Muestras informadas: {93} / {146}</Text> */}
             </View>
 
             {/* Use a light status bar on iOS to account for the black space above the modal */}
@@ -113,6 +198,10 @@ const styles = StyleSheet.create({
 
     selectContainer: {
         marginBottom: 10,
+    },
+
+    listaContainer: {
+        marginBottom: 20,
     },
 
     /** Avatar */

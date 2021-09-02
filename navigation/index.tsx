@@ -80,10 +80,10 @@ function BottomTabNavigator() {
                     tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
                 }}
             />
-            {/* <BottomTab.Screen
-                name="TabOne"
+            <BottomTab.Screen
+                name="reportes"
                 component={Reports}
-                options={({ navigation }: RootTabScreenProps<'TabOne'>) => ({
+                options={({ navigation }: RootTabScreenProps<'reportes'>) => ({
                     title: 'Resumen de resultados',
                     tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
                     headerRight: () => (
@@ -100,7 +100,7 @@ function BottomTabNavigator() {
                         </Pressable>
                     ),
                 })}
-            /> */}
+            />
         </BottomTab.Navigator>
     );
 }

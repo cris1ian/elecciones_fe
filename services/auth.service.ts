@@ -196,15 +196,15 @@ export const setRegistroIngreso = async (celular: string, newRegistroIngreso: bo
 /**
  * 
  */
-export const getPuntosInformados = async (idCategoria: number) => {
+export const getPuntosInformados = async (idCategoria: number): Promise<string | undefined> => {
     const ENDPOINT: string = `${REST_URL}/puntos-informados/${idCategoria}`;
 
     try {
         const resp: AxiosResponse<any> = await axios.get(ENDPOINT);
         console.log(`${ENDPOINT}`, resp);
-        const _mappedResp: any[] = resp.data.map((resp: any[]) => (resp && resp.length > 0) ? resp[0][''] : '');
+        const _mappedResp: string = resp.data.map((resp: any[]) => (resp && resp.length > 0) ? resp[0][''] : '');
         return _mappedResp
-        return resp
+        // return resp
     } catch (error) {
         return errorCatcher(error)
     }

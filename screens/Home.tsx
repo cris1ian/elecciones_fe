@@ -8,9 +8,16 @@ import { Select, CheckIcon } from 'native-base';
 
 import { Button } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 export default function Home() {
+    const route = useRoute();
+    const navigation = useNavigation();
+    const params: any = route.params;
+    const puntoMuestralId: string = params.puntoMuestralId;
     const [language, setLanguage] = React.useState("")
+
+    console.log('params', params, puntoMuestralId);
 
     return (
         <View style={styles.container}>

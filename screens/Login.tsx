@@ -2,35 +2,38 @@ import { StatusBar } from 'expo-status-bar';
 import * as React from 'react';
 import { Platform, StyleSheet } from 'react-native';
 
-import EditScreenInfo from '../components/EditScreenInfo';
 import { Text, View } from '../components/Themed';
 
 import { Button } from 'react-native-elements';
-import Icon from 'react-native-vector-icons/FontAwesome';
 import { Input } from 'react-native-elements';
-import { Input as NativeBaseInput } from 'native-base';
 import { useNavigation } from '@react-navigation/native';
 
 import { FontAwesome5 } from '@expo/vector-icons';
 
-import * as authService from '../services/auth.service'
+import * as authService from '../services/auth.service';
 import { createTwoButtonAlert } from '../utils/AlertsScreens';
 import { PuntoMuestral, PuntoMuestralRaw } from '../models/punto-muestral.model';
 import tiposPuntosMuestrales from '../constants/tipos-puntos-muestrales';
 
+import * as WebBrowser from 'expo-web-browser';
+
 export default function Login() {
     const navigation = useNavigation();
     const [celular, setCelular] = React.useState('');
+    const [spinner, setSpinner] = React.useState<boolean>(false);
 
     const onClickReportarPresencia = async () => {
         if (!celular) return createTwoButtonAlert('Error', 'No se ingresó un código o celular válido');
 
         let resp: PuntoMuestralRaw[] | undefined;
         try {
+            setSpinner(true);
             resp = await authService.getPuntoMuestralByCelular(celular);
         } catch (error) {
-            console.log(error);
+            setSpinner(false);
+            return console.log(error);
         }
+        setSpinner(false);
 
         if (resp === undefined) return createTwoButtonAlert('Error', 'El nro de celular ingresado es incorrecto');
         if (!resp || resp.length < 1) return createTwoButtonAlert('Error', 'El nro de celular ingresado es incorrecto');
@@ -42,10 +45,13 @@ export default function Login() {
 
         let resp2: any | undefined;
         try {
+            setSpinner(true);
             resp2 = await authService.setRegistroIngreso(celular, true);
         } catch (error) {
             console.log(error);
+            return setSpinner(false);
         }
+        setSpinner(false);
         createTwoButtonAlert(resp2.status, resp2.body);
 
     };
@@ -55,10 +61,13 @@ export default function Login() {
 
         let resp: PuntoMuestralRaw[] | undefined;
         try {
+            setSpinner(true);
             resp = await authService.getPuntoMuestralByCelular(celular);
         } catch (error) {
             console.log(error);
+            return setSpinner(false);
         }
+        setSpinner(false);
 
         if (resp === undefined) return createTwoButtonAlert('Error', 'El nro de celular ingresado es incorrecto');
         if (!resp || resp.length < 1) return createTwoButtonAlert('Error', 'El nro de celular ingresado es incorrecto');
@@ -68,11 +77,14 @@ export default function Login() {
         if (puntoMuestral.idTipo === tiposPuntosMuestrales.TD && !puntoMuestral.registroIngreso) {
             createTwoButtonAlert('Error', 'Antes de ingresar debe reportar su presencia');
         } else {
-            const routeHome: string = `/home/${puntoMuestral.id}`;
-            const routeReportes: string = `/reportes/${puntoMuestral.id}`;
-            navigation.navigate(puntoMuestral.idTipo === tiposPuntosMuestrales.TD ? routeHome : routeReportes);
+            const navigateTo: string = puntoMuestral.idTipo === tiposPuntosMuestrales.TD ? `home` : `reportes`;
+            navigation.navigate(__DEV__ ? 'reportes' : navigateTo, { puntoMuestralId: puntoMuestral.id });
         }
 
+    };
+
+    const onClickTutorial = async () => {
+        let result = await WebBrowser.openBrowserAsync('https://www.youtube.com/watch?v=aYOXFNVpkSc&feature=youtu.be');
     };
 
     return (
@@ -94,18 +106,18 @@ export default function Login() {
                 />
 
                 <View style={styles.buttonContainer}>
-                    <Button buttonStyle={styles.buttonStyle} title="Reportar presencia" type="outline" onPress={onClickReportarPresencia} disabled={!celular} />
+                    <Button buttonStyle={styles.buttonStyle} title="Reportar presencia" type="outline" onPress={onClickReportarPresencia} disabled={!celular} loading={spinner} />
                 </View>
 
                 <View style={styles.buttonContainer}>
-                    <Button buttonStyle={styles.buttonStyle} title="Ingresar" onPress={onClickIngresar} disabled={!celular} />
+                    <Button buttonStyle={styles.buttonStyle} title="Ingresar" onPress={onClickIngresar} disabled={!celular} loading={spinner} />
                 </View>
 
             </View>
 
             <View style={styles.subContainer}>
                 <View style={styles.buttonContainer}>
-                    <Button buttonStyle={styles.buttonStyle} title="Tutorial" type="outline" />
+                    <Button buttonStyle={styles.buttonStyle} title="Tutorial" type="outline" onPress={onClickTutorial} />
                 </View>
             </View>
 
