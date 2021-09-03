@@ -2,7 +2,6 @@ import { StatusBar } from 'expo-status-bar';
 import * as React from 'react';
 import { Platform, StyleSheet, ScrollView, TextInput } from 'react-native';
 
-import EditScreenInfo from '../components/EditScreenInfo';
 import { Text, View } from '../components/Themed';
 import { Select, CheckIcon } from 'native-base';
 
@@ -18,9 +17,7 @@ import { Mesa } from '../models/mesa.model';
 import { Categoria } from '../models/categoria.model';
 import { Candidato } from '../models/candidato.model';
 import { MesaCandidato } from '../models/mesa-candidato.model';
-// import { Input } from 'native-base';
-import { Input } from 'react-native-elements';
-import { createTwoButtonAlert } from '../utils/AlertsScreens';
+
 import { validarDatos } from '../utils/ValidarDatos';
 
 export default function Home() {

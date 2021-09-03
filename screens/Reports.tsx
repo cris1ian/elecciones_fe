@@ -6,7 +6,7 @@ import { Text, View } from '../components/Themed';
 
 import { Avatar } from 'react-native-elements';
 
-import { Select, CheckIcon } from 'native-base';
+import { Select, CheckIcon, Spinner, useToast } from 'native-base';
 import { LinearProgress } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Mesa } from '../models/mesa.model';
@@ -15,18 +15,20 @@ import { Resultado } from '../models/resultado.model';
 import * as authService from '../services/auth.service';
 
 import { SearchBar } from 'react-native-elements';
-import { createTwoButtonAlert } from '../utils/AlertsScreens';
+import { Button } from 'react-native-elements';
+
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 export default function Reports() {
     const [spinner, setSpinner] = React.useState<boolean>(false);
-    const [showFiltros, setShowFiltros] = React.useState<boolean>(false);
-    const [mesasFilter, setMesasFilter] = React.useState<string>('');
+    const [enableSearchButton, setEnableSearchButton] = React.useState<boolean>(false);
 
     /** Listas de Datos */
     const [mesas, setMesas] = React.useState<Mesa[]>([]);
     const [categorias, setCategorias] = React.useState<Categoria[]>([]);
 
     /** Datos Seleccionados */
+    const [mesasFilter, setMesasFilter] = React.useState<string>('');
     const [mesa, setMesa] = React.useState<Mesa>();
     const [categoria, setCategoria] = React.useState<Categoria>();
 
@@ -34,6 +36,9 @@ export default function Reports() {
     const [resultados, setResultados] = React.useState<Resultado[]>([]);
     const [puntosInformadosMsg, setPuntosInformadosMsg] = React.useState<string>('');
     const [porcentajeMax, setPorcentajeMax] = React.useState<number>(50);
+
+    const timerRef = React.useRef<any>();
+    const toast = useToast()
 
     // console.log('params', params, puntoMuestralId);
 
@@ -43,21 +48,43 @@ export default function Reports() {
     }, []);
 
     React.useEffect(() => {
-        if (mesasFilter === '') return console.log('mesasFilter === \'\'', mesasFilter);
-        /** Armar un debounce */
-        onClickBuscarPorMesa();
-    }, [mesasFilter]);
+        if (categorias.length === 0) return console.log('categorias.length === 0', categorias);
+        refrescarLista(categoria ? categoria : categorias[0], mesa);
+    }, [categoria]);
 
-    const onClickBuscarPorMesa = () => {
-        const value: string = mesasFilter;
+    // React.useEffect(() => {
+    //     if (mesas.length === 0) return console.log('mesas.length === 0', mesasFilter);
 
-        const _mesa: Mesa | undefined = mesas.find(m => m.descripcion === value);
+    //     debounceCallback();
+    // }, [mesasFilter]);
+
+    /** Debounce function for searchbar */
+    // const debounceCallback = () => {
+    //     console.log('debounceCallback',);
+    //     console.log('timerRef PRE', timerRef.current);
+
+    //     if (timerRef.current) clearTimeout(timerRef.current);
+
+    //     timerRef.current = setTimeout(() => {
+    //         console.log('fired Debounce!');
+    //         onClickBuscarPorMesa()
+    //     }, 400);
+    //     console.log('timerRef POST', timerRef.current);
+    // }
+
+    const onClickBuscarPorMesa = (borrarFiltroMesa?: boolean) => {
+        console.log('onClickBuscarPorMesa');
+        console.log('mesasFilter', mesasFilter,);
+        const _mesa: Mesa | undefined = borrarFiltroMesa ? undefined : mesas.find(m => m.descripcion === mesasFilter);
         setMesa(_mesa);
+        if (!_mesa && mesasFilter !== '' && !borrarFiltroMesa) return toast.show({ title: "Mesa no encontrada", variant: 'left-accent', placement: 'bottom' });
+        if (!borrarFiltroMesa) setEnableSearchButton(false);
+        // if (!_mesa && value !== '') return createTwoButtonAlert('Error', `Mesa no encontrada`);
 
-        if (!mesa) return createTwoButtonAlert('Error', `Mesa no encontrada`);
-        refrescarLista();
+        console.log('_mesa', _mesa);
+        const categoriaDefault: Categoria = categoria ? categoria : categorias[0];
+        refrescarLista(categoriaDefault, _mesa);
     }
-
 
     React.useEffect(() => {
         console.log('resultados', resultados);
@@ -78,9 +105,10 @@ export default function Reports() {
         if (!resp) return;
         setCategorias(resp);
 
-        // Categoria por defecto gobernador
+        // Categoria por defecto: la primera que llegue
         if (resp.length > 0) setCategoria(resp[0]);
-        refrescarLista();
+        const categoriaDefault: Categoria = resp[0];
+        refrescarLista(categoriaDefault);
     }
 
     const getAllMesas = async () => {
@@ -95,34 +123,41 @@ export default function Reports() {
         setMesas(resp);
     }
 
-    const refrescarLista = async () => {
+    const refrescarLista = async (_categoria: Categoria, _mesa?: Mesa) => {
+        console.log('refrescarLista', _categoria, _mesa);
         let resp: string | undefined;
         try {
-            resp = await authService.getPuntosInformados(categoria ? categoria.id : 0)
+            setSpinner(true);
+            resp = await authService.getPuntosInformados(_categoria ? _categoria.id : 0)
         } catch (error) {
             console.log(error);
+            setSpinner(false);
             return
         }
-        if (!resp) return;
+        if (!resp) return setSpinner(false);
+        console.log('setPuntosInformadosMsg', resp);
         setPuntosInformadosMsg(resp);
 
         let resp2;
         try {
-            resp2 = await authService.getResultados(categoria ? categoria.id : 0, mesa ? mesa.id : 0);
+            setSpinner(true);
+            resp2 = await authService.getResultados(_categoria ? _categoria.id : 0, _mesa ? _mesa.id : 0);
         } catch (error) {
             console.log(error);
+            setSpinner(false);
             return
         }
+        setSpinner(false);
         if (!resp2) return;
         // console.log('setResultados', resp2);
         const resultadosOrdenados: Resultado[] = resp2.sort((a, b) => a.porcentaje > b.porcentaje ? -1 : 1);
-        setResultados([...resultadosOrdenados, ...resultadosOrdenados, ...resultadosOrdenados]);
+        // setResultados(__DEV__ ? [...resultadosOrdenados, ...resultadosOrdenados, ...resultadosOrdenados] : resultadosOrdenados);
+        setResultados(resultadosOrdenados);
     };
 
     return (
-        <View style={styles.container}>
-
-            <View style={styles.mainBlock}>
+        <View style={{ flex: 1, }}>
+            <ScrollView contentContainerStyle={styles.container}>
 
                 <View style={styles.selectContainer}>
                     <Select
@@ -139,44 +174,43 @@ export default function Reports() {
                     </Select>
                 </View>
 
-
-                {/* <View style={styles.selectContainer}>
-                    <Select
-                        minWidth={200}
-                        placeholder="Filtrar por mesa"
-                        selectedValue={mesa ? `${mesa?.id}` : undefined}
-                        onValueChange={(itemValue: string) => setMesa(mesas.find((e: Mesa) => `${e.id}` === itemValue))}
-                        _selectedItem={{ bg: "cyan.600", endIcon: <CheckIcon size={4} />, }}
-                    >
-                        <Select.Item label="JavaScript" value="js" />
-                        <Select.Item label="TypeScript" value="ts" />
-                        <Select.Item label="C" value="c" />
-                        <Select.Item label="Python" value="py" />
-                        <Select.Item label="Java" value="java" />
-                    </Select>
-                </View> */}
-
                 <View style={styles.selectContainer}>
                     <SearchBar
                         placeholder="Filtrar por mesa"
-                        onChangeText={(value) => setMesasFilter(value)}
+                        onChangeText={(value) => { setEnableSearchButton(true); setMesasFilter(value); }}
+                        onClear={() => { setEnableSearchButton(false); onClickBuscarPorMesa(true); }}
+                        keyboardType='number-pad'
                         value={mesasFilter}
                         lightTheme
                         round
                         containerStyle={{ backgroundColor: 'transparent', borderBottomWidth: 0, borderTopWidth: 0, }}
                         inputContainerStyle={{ backgroundColor: '#ddd5', }}
+                        showLoading={spinner}
                     />
                 </View>
 
-                <ScrollView style={{ flex: 1 }}>
-                    {resultados.map((elem: Resultado, index: number) =>
+                <View style={styles.mesasFilterContainer}>
+                    <Text style={styles.mesasFilter}>{mesasFilter !== '' ? `Mesa ${mesasFilter}` : 'Todas las mesas'}</Text>
+                    <Button buttonStyle={styles.mesasFilterButtonStyle}
+                        title="Buscar"
+                        disabled={spinner || !enableSearchButton}
+                        onPress={() => onClickBuscarPorMesa()}
+                        icon={<Icon name="search" size={15} color="white" style={{ marginRight: 10 }} />} />
+                </View>
+
+                {spinner ?
+                    <View style={styles.selectContainer}>
+                        <Spinner color="cyan.600" />
+                    </View> :
+                    resultados.map((elem: Resultado, index: number) =>
                         <View style={styles.listaContainer} key={index}>
                             <View style={styles.avatarContainer}>
 
                                 <Avatar
                                     rounded
                                     size="medium"
-                                    title={elem.candidatoNombre}
+                                    title={elem.candidatoNombre.substr(0, elem.candidatoNombre.indexOf('-'))}
+                                    titleStyle={{ color: 'black', fontSize: 20, fontWeight: 'bold', }}
                                     source={{ uri: elem.urlImagen, }}
                                 />
 
@@ -192,32 +226,34 @@ export default function Reports() {
                             </View>
 
                             <View style={{ width: '100%', marginVertical: 5 }}>
-                                <LinearProgress color={"primary"} value={elem.porcentaje / porcentajeMax} variant='determinate' trackColor='#ddd' />
+                                {/* <LinearProgress color={"primary"} value={elem.porcentaje / (porcentajeMax || 100)} variant='determinate' trackColor='#ddd' /> */}
+                                <LinearProgress color={"primary"} value={elem.porcentaje / 100} variant='determinate' trackColor='#ddd' />
                             </View>
                         </View>
-                    )}
-                </ScrollView>
+                    )
+                }
 
-            </View>
+                {/* Use a light status bar on iOS to account for the black space above the modal */}
+                <StatusBar style={Platform.OS === 'ios' ? 'light' : 'auto'} />
+            </ScrollView>
 
-            <View style={styles.mainBlock}>
-                <Text style={styles.footerInfo}>puntosInformadosMsg: {puntosInformadosMsg}</Text>
+            <View style={styles.footerContainer}>
+                <Text style={styles.footerInfo}>{puntosInformadosMsg}</Text>
                 {/* <Text style={styles.footerInfo}>Muestras informadas: {93} / {146}</Text> */}
             </View>
 
-            {/* Use a light status bar on iOS to account for the black space above the modal */}
-            <StatusBar style={Platform.OS === 'ios' ? 'light' : 'auto'} />
         </View >
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        // flex: 1,
+        // alignItems: 'center',
+        // justifyContent: 'space-between',
         paddingHorizontal: '5%',
         paddingTop: '5%',
+        // backgroundColor: 'green',
     },
     mainBlock: {
         width: '100%',
@@ -226,6 +262,31 @@ const styles = StyleSheet.create({
 
     selectContainer: {
         marginBottom: 10,
+    },
+
+    /** Info del searchbar */
+    mesasFilterContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+        // backgroundColor: 'green',
+    },
+    mesasFilterButtonStyle: {
+        borderRadius: 50,
+        minWidth: 110,
+        // backgroundColor: 'red',
+    },
+    mesasFilter: {
+        fontSize: 18,
+        // fontWeight: 'bold',
+        textAlign: 'center',
+        color: '#888',
+        // backgroundColor: 'red',
+    },
+
+    chipcontainerStyle: {
+        margin: 5,
     },
 
     /** Avatar */
@@ -246,7 +307,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     avatarText1: {
-        fontSize: 18,
+        fontSize: 15,
         // backgroundColor: 'lime',
     },
     avatarText2: {
@@ -257,9 +318,6 @@ const styles = StyleSheet.create({
 
     avatarRight: {
         minWidth: 80,
-        // flex: 1,
-        // flexDirection: 'row',
-        // alignItems: 'center',
         // backgroundColor: 'blue',
         justifyContent: 'space-between',
     },
@@ -271,9 +329,11 @@ const styles = StyleSheet.create({
     },
 
     /** Footer info */
+    footerContainer: {
+        marginVertical: 10,
+    },
     footerInfo: {
         fontSize: 15,
-        // fontWeight: 'bold',
         marginBottom: 20,
         textAlign: 'center',
         color: '#888'

@@ -202,8 +202,8 @@ export const getPuntosInformados = async (idCategoria: number): Promise<string |
     try {
         const resp: AxiosResponse<any> = await axios.get(ENDPOINT);
         console.log(`${ENDPOINT}`, resp);
-        const _mappedResp: string = resp.data.map((resp: any[]) => (resp && resp.length > 0) ? resp[0][''] : '');
-        return _mappedResp
+        const firstElem: any = (resp.data && resp.data.length > 0) ? resp.data[0][""] : '';
+        return firstElem
         // return resp
     } catch (error) {
         return errorCatcher(error)

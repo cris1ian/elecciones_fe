@@ -57,7 +57,7 @@ export const validarDatos = (mesasCandidatos: MesaCandidato[]): boolean => {
     }
 
     if (candidatoTotalVotosValido.cantidadVotos > candidatoTotalVotos.cantidadVotos || candidatoTotalVotosValido.cantidadVotos < sumTotalVotos) {
-        `Total Votos Valido tiene que ser menor o igual a Total votos, y mayor o igual a la suma de los votos de los candidatos`
+        createTwoButtonAlert('Error', `Total Votos Valido tiene que ser menor o igual a Total votos, y mayor o igual a la suma de los votos de los candidatos`);
         return false;
     }
 
