@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "elecciones-v2",
+    "name": "Elecciones 2021",
     "slug": "elecciones-v2",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "foregroundImage": "./assets/images/splash.png",
+      "backgroundColor": "#0d3b5e",
+      "resizeMode": "cover"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
@@ -19,16 +19,16 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "buildNumber": "1.0.1"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
-    },
-    "web": {
-      "favicon": "./assets/images/favicon.png"
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#0d3b5e"
+      },
+      "package": "com.eon6.eleccionesv2",
+      "versionCode": 420010001
     }
   }
 }
