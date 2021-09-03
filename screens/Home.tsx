@@ -206,7 +206,7 @@ export default function Home() {
                                         size="medium"
                                         title={elem.candidato.nombre.substr(0, elem.candidato.nombre.indexOf('-'))}
                                         titleStyle={{ color: 'black', fontSize: 20, fontWeight: 'bold', }}
-                                        source={{ uri: elem.candidato.urlimagen, }}
+                                        source={{ uri: elem.candidato.urlimagen }}
                                     />
 
                                     <View style={styles.avatarCenter}>

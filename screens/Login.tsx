@@ -77,8 +77,8 @@ export default function Login() {
         if (puntoMuestral.idTipo === tiposPuntosMuestrales.TD && !puntoMuestral.registroIngreso) {
             createTwoButtonAlert('Error', 'Antes de ingresar debe reportar su presencia');
         } else {
-            const navigateTo: string = puntoMuestral.idTipo === tiposPuntosMuestrales.TD ? `home` : `reportes`;
-            navigation.navigate((__DEV__ && false) ? 'reportes' : navigateTo, { puntoMuestralId: puntoMuestral.id });
+            const navigateTo: string = puntoMuestral.idTipo === tiposPuntosMuestrales.TD ? `Home` : `Reports`;
+            navigation.navigate(navigateTo, { puntoMuestralId: puntoMuestral.id });
         }
 
     };

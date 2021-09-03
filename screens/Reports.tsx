@@ -191,11 +191,19 @@ export default function Reports() {
 
                 <View style={styles.mesasFilterContainer}>
                     <Text style={styles.mesasFilter}>{mesasFilter !== '' ? `Mesa ${mesasFilter}` : 'Todas las mesas'}</Text>
-                    <Button buttonStyle={styles.mesasFilterButtonStyle}
-                        title="Buscar"
-                        disabled={spinner || !enableSearchButton}
-                        onPress={() => onClickBuscarPorMesa()}
-                        icon={<Icon name="search" size={15} color="white" style={{ marginRight: 10 }} />} />
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Button buttonStyle={styles.mesasFilterButtonStyle}
+                            title="Buscar"
+                            disabled={spinner || !enableSearchButton}
+                            onPress={() => onClickBuscarPorMesa()}
+                            icon={<Icon name="search" size={15} color="white" style={{ marginRight: 10 }} />} />
+
+                        <Button buttonStyle={styles.mesasRefreshButtonStyle}
+                            disabled={spinner}
+                            onPress={() => refrescarLista(categoria ? categoria : categorias[0])}
+                            icon={<Icon name="refresh" size={15} color="white" />} />
+                    </View>
                 </View>
 
                 {spinner ?
@@ -275,6 +283,13 @@ const styles = StyleSheet.create({
     mesasFilterButtonStyle: {
         borderRadius: 50,
         minWidth: 110,
+        // backgroundColor: 'red',
+    },
+    mesasRefreshButtonStyle: {
+        borderRadius: 50,
+        width: 40,
+        height: 40,
+        marginLeft: 10,
         // backgroundColor: 'red',
     },
     mesasFilter: {

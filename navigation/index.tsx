@@ -4,7 +4,6 @@
  *
  */
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
@@ -17,8 +16,6 @@ import Home from '../screens/Home';
 import Reports from '../screens/Reports';
 import ModalScreen from '../screens/ModalScreen';
 import NotFoundScreen from '../screens/NotFoundScreen';
-import TabOneScreen from '../screens/TabOneScreen';
-import TabTwoScreen from '../screens/TabTwoScreen';
 import { RootStackParamList, RootTabParamList, RootTabScreenProps } from '../types';
 import LinkingConfiguration from './LinkingConfiguration';
 
@@ -41,7 +38,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 function RootNavigator() {
     return (
         <Stack.Navigator>
-            <Stack.Screen name="Root" component={BottomTabNavigator} options={{ headerShown: false }} />
+            <Stack.Screen name="Root" component={MainNavigatorNavigator} options={{ headerShown: false }} />
             <Stack.Screen name="NotFound" component={NotFoundScreen} options={{ title: 'Oops!' }} />
             <Stack.Group screenOptions={{ presentation: 'modal' }}>
                 <Stack.Screen name="Modal" component={ModalScreen} />
@@ -54,54 +51,30 @@ function RootNavigator() {
  * A bottom tab navigator displays tab buttons on the bottom of the display to switch screens.
  * https://reactnavigation.org/docs/bottom-tab-navigator
  */
-const BottomTab = createBottomTabNavigator<RootTabParamList>();
+const MainNavigator = createNativeStackNavigator<any>();
 
-function BottomTabNavigator() {
+function MainNavigatorNavigator() {
     const colorScheme = useColorScheme();
 
     return (
-        <BottomTab.Navigator initialRouteName="login"
-            screenOptions={{
-                tabBarActiveTintColor: Colors[colorScheme].tint,
-            }}>
-            <BottomTab.Screen
-                name="login"
+        <MainNavigator.Navigator initialRouteName="Login"
+            screenOptions={{ headerStyle: { backgroundColor: '#0d3b5e' }, headerTintColor: 'white' }} >
+            <MainNavigator.Screen
+                name="Login"
                 component={Login}
-                options={{
-                    title: 'Ingreso',
-                    tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-                }}
+                options={{ title: 'Ingreso', headerTitleAlign: 'center' }}
             />
-            <BottomTab.Screen
-                name="home"
+            <MainNavigator.Screen
+                name="Home"
                 component={Home}
-                options={{
-                    title: 'Ingreso resultados',
-                    tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-                }}
+                options={{ title: 'Ingreso resultados', }}
             />
-            <BottomTab.Screen
-                name="reportes"
+            <MainNavigator.Screen
+                name="Reports"
                 component={Reports}
-                options={({ navigation }: RootTabScreenProps<'reportes'>) => ({
-                    title: 'Resumen de resultados',
-                    tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-                    headerRight: () => (
-                        <Pressable
-                            onPress={() => console.log('refresh')}
-                            // onPress={() => navigation.navigate('Modal')}
-                            style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1, })}>
-                            <MaterialIcons
-                                name="refresh"
-                                size={25}
-                                color={Colors[colorScheme].text}
-                                style={{ marginRight: 15 }}
-                            />
-                        </Pressable>
-                    ),
-                })}
+                options={{ title: 'Resumen de resultados', }}
             />
-        </BottomTab.Navigator>
+        </ MainNavigator.Navigator>
     );
 }
 
