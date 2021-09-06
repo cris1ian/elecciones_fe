@@ -2,7 +2,7 @@
     "expo": {
         "name": "Elecciones Santa Fe Senadores",
         "slug": "elecciones-2021-undef",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "orientation": "portrait",
         "icon": "./assets/images/icon.png",
         "scheme": "myapp",
@@ -20,7 +20,7 @@
         ],
         "ios": {
             "supportsTablet": false,
-            "buildNumber": "1.0.0"
+            "buildNumber": "1.0.1"
         },
         "android": {
             "adaptiveIcon": {
@@ -28,7 +28,7 @@
                 "backgroundColor": "#0d3b5e"
             },
             "package": "com.eon6.elecciones2021undef",
-            "versionCode": 420010000
+            "versionCode": 420010001
         }
     }
 }
