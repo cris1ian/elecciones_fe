@@ -1,34 +1,34 @@
 {
-  "expo": {
-    "name": "Elecciones 2021",
-    "slug": "elecciones-v2",
-    "version": "1.0.1",
-    "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
-    "userInterfaceStyle": "automatic",
-    "splash": {
-      "foregroundImage": "./assets/images/splash.png",
-      "backgroundColor": "#0d3b5e",
-      "resizeMode": "cover"
-    },
-    "updates": {
-      "fallbackToCacheTimeout": 0
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "ios": {
-      "supportsTablet": false,
-      "buildNumber": "1.0.1"
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icon.png",
-        "backgroundColor": "#0d3b5e"
-      },
-      "package": "com.eon6.eleccionesv2",
-      "versionCode": 420010001
+    "expo": {
+        "name": "Elecciones Santa Fe Senadores",
+        "slug": "elecciones-2021-undef",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "icon": "./assets/images/icon.png",
+        "scheme": "myapp",
+        "userInterfaceStyle": "automatic",
+        "splash": {
+            "foregroundImage": "./assets/images/splash.png",
+            "backgroundColor": "#0d3b5e",
+            "resizeMode": "cover"
+        },
+        "updates": {
+            "fallbackToCacheTimeout": 0
+        },
+        "assetBundlePatterns": [
+            "**/*"
+        ],
+        "ios": {
+            "supportsTablet": false,
+            "buildNumber": "1.0.0"
+        },
+        "android": {
+            "adaptiveIcon": {
+                "foregroundImage": "./assets/images/icon.png",
+                "backgroundColor": "#0d3b5e"
+            },
+            "package": "com.eon6.elecciones2021undef",
+            "versionCode": 420010000
+        }
     }
-  }
 }
