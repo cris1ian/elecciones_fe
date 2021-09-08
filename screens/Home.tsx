@@ -1,9 +1,9 @@
 import { StatusBar } from 'expo-status-bar';
 import * as React from 'react';
-import { Platform, StyleSheet, ScrollView, TextInput } from 'react-native';
+import { Platform, StyleSheet, ScrollView, TextInput, Image, } from 'react-native';
 
 import { Text, View } from '../components/Themed';
-import { Select, CheckIcon } from 'native-base';
+import { Select, CheckIcon, useToast } from 'native-base';
 
 import { Button } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome5';
@@ -19,8 +19,14 @@ import { Candidato } from '../models/candidato.model';
 import { MesaCandidato } from '../models/mesa-candidato.model';
 
 import { validarDatos } from '../utils/ValidarDatos';
+import { Camera } from 'expo-camera';
+import { createTwoButtonAlert } from '../utils/AlertsScreens';
+import { PictureCamera } from '../models/picture-camera.interface';
 
 export default function Home() {
+    let camera: Camera | null;
+
+    const toast = useToast();
     const route = useRoute();
     const navigation = useNavigation();
     const params: any = route.params;
@@ -35,12 +41,14 @@ export default function Home() {
 
     const [mesa, setMesa] = React.useState<Mesa>();
     const [categoria, setCategoria] = React.useState<any>();
-    const [fileCaptura, setFileCaptura] = React.useState<any>(null);
+
+    const [picture, setPicture] = React.useState<PictureCamera>();
 
     React.useEffect(() => {
         console.log('params', params, puntoMuestralId);
         if (!params) return
-        setPuntoMuestralId(params?.puntoMuestralId);
+        if (params?.puntoMuestralId) setPuntoMuestralId(params?.puntoMuestralId);
+        if (params?.photo) setPicture(params.photo);
     }, [params]);
 
     React.useEffect(() => {
@@ -67,8 +75,22 @@ export default function Home() {
         setMesasCandidatos([]);
         setCategorias([]);
         setCategoria(undefined);
-        setFileCaptura(undefined);
+        setPicture(undefined);
         if (!excepMesa) setMesa(undefined);
+    }
+
+    const askCameraPermission = async (): Promise<boolean> => {
+        console.log('askCameraPermission');
+        if (Platform.OS !== 'web') {
+            const { status } = await Camera.requestPermissionsAsync();
+            console.log('askCameraPermission status', status);
+            if (status !== 'granted') {
+                toast.show({ title: "Sin acceso a la cámara", description: "Para enviar fotos de la planilla debes permitir el acceso a la cámara.", variant: 'left-accent', placement: 'bottom' });
+                return false
+            }
+            return true
+        };
+        return false
     }
 
     const getMesasByPuntoMuestral = async () => {
@@ -129,10 +151,9 @@ export default function Home() {
 
     /** Estaba desabilitado el botón en la APP v1 Ionic*/
     const onClickFoto = async () => {
-        // this.cameraService.takePictureAndReturnFile()
-        //     .then(
-        //         (f) => this.fileCaptura = f
-        //     )
+        const _permissionGranted: boolean = await askCameraPermission();
+        if (!_permissionGranted) return
+        if (puntoMuestralId) navigation.navigate('PictureFromCamera', { puntoMuestralId });
     }
 
     const onClickConfirmar = async () => {
@@ -145,7 +166,7 @@ export default function Home() {
         let resp: any | undefined;
         try {
             setSpinner(true);
-            resp = await authService.postMesasCandidatos(mesasCandidatos, fileCaptura, mesa, categoria)
+            resp = await authService.postMesasCandidatos(mesasCandidatos, mesa, categoria, picture)
         } catch (error) {
             console.log(error);
             setSpinner(false);
@@ -256,11 +277,14 @@ export default function Home() {
                         </>
                     }
 
-                    <Text style={styles.title}>Saque una foto de la planilla {'\n'} (opcional)</Text>
+                    <Text style={[styles.title]}>Saque una foto de la planilla {'\n'} (opcional)</Text>
+
+                    {picture ? <Image source={{ uri: picture.uri }} style={{ minHeight: 400, marginBottom: 20, resizeMode: 'contain' }} /> : null}
 
                     <View style={styles.subContainer}>
-                        <Button buttonStyle={styles.cameraButton} disabled={true} icon={<Icon name="camera" size={35} color="white" />} onPress={onClickFoto} />
+                        <Button buttonStyle={styles.cameraButton} icon={<Icon name="camera" size={35} color="white" />} onPress={onClickFoto} />
                     </View>
+
 
                 </View>
 
@@ -275,7 +299,7 @@ export default function Home() {
                 {/* Use a light status bar on iOS to account for the black space above the modal */}
                 <StatusBar style={Platform.OS === 'ios' ? 'light' : 'auto'} />
             </ScrollView>
-        </View>
+        </View >
     );
 }
 
@@ -286,7 +310,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: '5%',
         paddingTop: '5%',
-        minHeight: '80%'
+        // minHeight: '70%'
     },
     mainBlock: {
         width: '100%',

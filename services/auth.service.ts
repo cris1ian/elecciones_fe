@@ -7,7 +7,8 @@ import { Candidato } from "../models/candidato.model";
 import { Categoria } from "../models/categoria.model";
 import { MesaCandidato } from "../models/mesa-candidato.model";
 import { Resultado } from "../models/resultado.model";
-
+import { PictureCamera } from "../models/picture-camera.interface";
+import * as FileSystem from 'expo-file-system';
 
 /**
  * Retorna un Observable con todas las categorias
@@ -89,12 +90,21 @@ export const getCandidatosByCategoria = async (idCategoria: number): Promise<Can
 /**
  * Inseta en la db todos los nuevos mesasCandidatos
  */
-export const postMesasCandidatos = async (mesasCandidatos: MesaCandidato[], imgBlob: any, mesa: Mesa, categoria: Categoria): Promise<any> => {
+export const postMesasCandidatos = async (mesasCandidatos: MesaCandidato[], mesa: Mesa, categoria: Categoria, picture?: PictureCamera): Promise<any> => {
     const ENDPOINT: string = `${REST_URL}/mesa-candidato/${mesa.descripcion}/${categoria.descripcion}`;
 
     const formData = new FormData();
 
-    formData.append('attachment', imgBlob);
+    // if (picture) {
+    //     let fileBase64: string = await FileSystem.readAsStringAsync(picture.uri, { encoding: 'base64' });
+    //     const body: any = {
+    //         uri: fileBase64,
+    //         type: 'image/jpg',
+    //         name: `Mesa ${mesa.descripcion} - ${categoria.descripcion} - Planilla.jpg}`,
+    //     }
+    //     formData.append('attachment', body);
+    //     console.log('fileBase64', fileBase64);
+    // }
     formData.append('mesasCandidatos', JSON.stringify(mesasCandidatos));
 
     try {

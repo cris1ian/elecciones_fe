@@ -18,6 +18,7 @@ import ModalScreen from '../screens/ModalScreen';
 import NotFoundScreen from '../screens/NotFoundScreen';
 import { RootStackParamList, RootTabParamList, RootTabScreenProps } from '../types';
 import LinkingConfiguration from './LinkingConfiguration';
+import PictureFromCamera from '../screens/PictureFromCamera';
 
 export default function Navigation({ colorScheme }: { colorScheme: ColorSchemeName }) {
     return (
@@ -42,6 +43,7 @@ function RootNavigator() {
             <Stack.Screen name="NotFound" component={NotFoundScreen} options={{ title: 'Oops!' }} />
             <Stack.Group screenOptions={{ presentation: 'modal' }}>
                 <Stack.Screen name="Modal" component={ModalScreen} />
+                <Stack.Screen name="PictureFromCamera" component={PictureFromCamera} options={{ title: 'Saque una foto' }} />
             </Stack.Group>
         </Stack.Navigator>
     );
