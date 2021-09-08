@@ -163,7 +163,7 @@ export default function Reports() {
                     <Select
                         minWidth={200}
                         placeholder="Seleccione una categoría"
-                        selectedValue={categoria ? `${categoria?.id}` : undefined}
+                        selectedValue={categoria ? `${categoria?.id}` : ''}
                         onValueChange={(itemValue: string) => setCategoria(categorias.find((e: Categoria) => `${e.id}` === itemValue))}
                         _selectedItem={{ bg: "cyan.600", endIcon: <CheckIcon size={4} />, }}
                     >
@@ -201,45 +201,47 @@ export default function Reports() {
 
                         <Button buttonStyle={styles.mesasRefreshButtonStyle}
                             disabled={spinner}
-                            onPress={() => refrescarLista(categoria ? categoria : categorias[0])}
+                            onPress={() => refrescarLista(categoria ? categoria : categorias[0], mesa)}
                             icon={<Icon name="refresh" size={15} color="white" />} />
                     </View>
                 </View>
 
-                {spinner ?
-                    <View style={styles.selectContainer}>
-                        <Spinner color="cyan.600" />
-                    </View> :
-                    resultados.map((elem: Resultado, index: number) =>
-                        <View style={styles.listaContainer} key={index}>
-                            <View style={styles.avatarContainer}>
+                <View style={{ minHeight: 10, }}>
+                    {spinner ? <LinearProgress color={"primary"} /> : null}
+                </View>
 
-                                <Avatar
-                                    rounded
-                                    size="medium"
-                                    title={elem.candidatoNombre.substr(0, elem.candidatoNombre.indexOf('-'))}
-                                    titleStyle={{ color: 'black', fontSize: 20, fontWeight: 'bold', }}
-                                    source={{ uri: elem.urlImagen, }}
-                                />
 
-                                <View style={styles.avatarCenter}>
-                                    <Text style={styles.avatarText1}>{elem.candidatoNombre}</Text>
-                                    <Text style={styles.avatarText2}>{elem.proyectados}</Text>
-                                </View>
+                {resultados.length === 0 ? <Text style={styles.title}>Esta mesa todavía no tiene información</Text> : null}
 
-                                <View style={styles.avatarRight}>
-                                    <Text style={styles.avatarText3}>{elem.porcentaje}%</Text>
-                                </View>
+                {resultados.map((elem: Resultado, index: number) =>
+                    <View style={styles.listaContainer} key={index}>
+                        <View style={styles.avatarContainer}>
 
+                            <Avatar
+                                rounded
+                                size="medium"
+                                title={elem.candidatoNombre.substr(0, elem.candidatoNombre.indexOf('-'))}
+                                titleStyle={{ color: 'black', fontSize: 20, fontWeight: 'bold', }}
+                                source={{ uri: elem.urlImagen, }}
+                            />
+
+                            <View style={styles.avatarCenter}>
+                                <Text style={styles.avatarText1}>{elem.candidatoNombre}</Text>
+                                <Text style={styles.avatarText2}>{elem.proyectados}</Text>
                             </View>
 
-                            <View style={{ width: '100%', marginVertical: 5 }}>
-                                {/* <LinearProgress color={"primary"} value={elem.porcentaje / (porcentajeMax || 100)} variant='determinate' trackColor='#ddd' /> */}
-                                <LinearProgress color={"primary"} value={elem.porcentaje / 100} variant='determinate' trackColor='#ddd' />
+                            <View style={styles.avatarRight}>
+                                <Text style={styles.avatarText3}>{elem.porcentaje}%</Text>
                             </View>
+
                         </View>
-                    )
-                }
+
+                        <View style={{ width: '100%', marginVertical: 5 }}>
+                            {/* <LinearProgress color={"primary"} value={elem.porcentaje / (porcentajeMax || 100)} variant='determinate' trackColor='#ddd' /> */}
+                            <LinearProgress color={"primary"} value={elem.porcentaje / 100} variant='determinate' trackColor='#ddd' />
+                        </View>
+                    </View>
+                )}
 
                 {/* Use a light status bar on iOS to account for the black space above the modal */}
                 <StatusBar style={Platform.OS === 'ios' ? 'light' : 'auto'} />
@@ -270,6 +272,15 @@ const styles = StyleSheet.create({
 
     selectContainer: {
         marginBottom: 10,
+        // backgroundColor: 'green',
+    },
+
+    /** Titulos de secciones */
+    title: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginVertical: 20,
+        textAlign: 'center',
     },
 
     /** Info del searchbar */

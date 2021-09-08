@@ -33,17 +33,17 @@ export const validarDatos = (mesasCandidatos: MesaCandidato[]): boolean => {
         return false;
     }
 
-    // RN: Sumatoria cnadidatos exceptuando total votos tiene que ser menor o igual a 350
+    // RN: Sumatoria candidatos exceptuando total votos y total votos validos
     const sumTotalVotos: number = mesasCandidatos
         .filter(mc => mc.candidato.candidatoTipo !== candidatosTipos.TOTAL_VOTOS && mc.candidato.candidatoTipo !== candidatosTipos.TOTAL_VOTOS_VALIDO)
         .reduce((acc, mc) => acc + Number(mc.cantidadVotos), 0);
 
+    // RN: Los votos no pueden superar el Maximo de votos (350)
     if (sumTotalVotos > reglas.MAX_VOTOS) {
         createTwoButtonAlert('Error', `La suma de los votos de cada candidato supera la cantidad máxima permitida: ${reglas.MAX_VOTOS}`);
         return false
     }
 
-    // RN: Candidato Total Votos Valido tiene que ser <= a Total votos, y >= a la suma de los votos de los candidatos
     const candidatoTotalVotosValido: MesaCandidato | undefined = mesasCandidatos.find(mc => mc.candidato.candidatoTipo === candidatosTipos.TOTAL_VOTOS_VALIDO);
 
     if (candidatoTotalVotosValido === undefined || candidatoTotalVotosValido === null) {
@@ -56,8 +56,15 @@ export const validarDatos = (mesasCandidatos: MesaCandidato[]): boolean => {
         return false
     }
 
-    if (candidatoTotalVotosValido.cantidadVotos > candidatoTotalVotos.cantidadVotos || candidatoTotalVotosValido.cantidadVotos < sumTotalVotos) {
-        createTwoButtonAlert('Error', `Total Votos Valido tiene que ser menor o igual a Total votos, y mayor o igual a la suma de los votos de los candidatos`);
+    // RN: Candidato Total Votos Valido tiene que ser <= a Total votos
+    if (candidatoTotalVotosValido.cantidadVotos > candidatoTotalVotos.cantidadVotos) {
+        createTwoButtonAlert('Error', `Total Votos Valido tiene que ser mayor o igual a la suma de los votos de los candidatos`);
+        return false;
+    }
+    
+    // RN: Candidato Total Votos Valido tiene que ser >= a la suma de los votos de los candidatos
+    if (candidatoTotalVotosValido.cantidadVotos < sumTotalVotos) {
+        createTwoButtonAlert('Error', `Total Votos Valido tiene que ser menor o igual a Total votos`);
         return false;
     }
 
