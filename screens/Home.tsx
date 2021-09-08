@@ -236,7 +236,7 @@ export default function Home() {
                                 const setCantidadVotos = (value: string) => {
                                     const _editedMesaCandidato: MesaCandidato = { ...elem, cantidadVotos: +value };
                                     let _editedMesasCandidatos: MesaCandidato[] = mesasCandidatos.map((e: MesaCandidato) => e.candidato.id === elem.candidato.id ? _editedMesaCandidato : e);
-                                    if (index + 1 === mesasCandidatos.length - 1) _editedMesasCandidatos[mesasCandidatos.length - 1].cantidadVotos = +value; /** Copio el anteúltimo en el último */
+                                    // if (index + 1 === mesasCandidatos.length - 1) _editedMesasCandidatos[mesasCandidatos.length - 1].cantidadVotos = +value; /** Copio el anteúltimo en el último */
                                     setMesasCandidatos(_editedMesasCandidatos);
                                 };
 
@@ -282,7 +282,7 @@ export default function Home() {
                     {picture ? <Image source={{ uri: picture.uri }} style={{ minHeight: 400, marginBottom: 20, resizeMode: 'contain' }} /> : null}
 
                     <View style={styles.subContainer}>
-                        <Button buttonStyle={styles.cameraButton} icon={<Icon name="camera" size={35} color="white" />} onPress={onClickFoto} />
+                        <Button buttonStyle={styles.cameraButton} disabled={true} icon={<Icon name="camera" size={35} color="white" />} onPress={onClickFoto} />
                     </View>
 
 

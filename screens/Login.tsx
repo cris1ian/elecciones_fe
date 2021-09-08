@@ -52,6 +52,7 @@ export default function Login() {
             return setSpinner(false);
         }
         setSpinner(false);
+        if (!resp2) return console.log('resp2 undefined');
         createTwoButtonAlert(resp2.status, resp2.body);
 
     };

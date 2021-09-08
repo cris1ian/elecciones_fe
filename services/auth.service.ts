@@ -183,14 +183,14 @@ export const getAllMesas = async (): Promise<Mesa[] | undefined> => {
 /**
  * Reportar presencia
  */
-export const setRegistroIngreso = async (celular: string, newRegistroIngreso: boolean) => {
+export const setRegistroIngreso = async (celular: string, newRegistroIngreso: boolean): Promise<{ body: string, status: string } | undefined> => {
     const ENDPOINT: string = `${REST_URL}/punto_muestral/${celular}`;
     const body: any = { registroIngreso: newRegistroIngreso ? 1 : 0 };
 
     try {
-        const resp: AxiosResponse<any> = await axios.post('news', body);
+        const resp: AxiosResponse<any> = await axios.post(ENDPOINT, body);
         console.log(`${ENDPOINT}`, resp);
-        return resp
+        return resp.data
     } catch (error) {
         return errorCatcher(error)
     }
