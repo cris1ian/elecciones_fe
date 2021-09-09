@@ -1,9 +1,9 @@
 import { StatusBar } from 'expo-status-bar';
 import * as React from 'react';
-import { Platform, StyleSheet, ScrollView, TextInput } from 'react-native';
+import { Platform, StyleSheet, ScrollView, TextInput, Image, } from 'react-native';
 
 import { Text, View } from '../components/Themed';
-import { Select, CheckIcon } from 'native-base';
+import { Select, CheckIcon, useToast } from 'native-base';
 
 import { Button } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome5';
@@ -19,8 +19,14 @@ import { Candidato } from '../models/candidato.model';
 import { MesaCandidato } from '../models/mesa-candidato.model';
 
 import { validarDatos } from '../utils/ValidarDatos';
+import { Camera } from 'expo-camera';
+import { createTwoButtonAlert } from '../utils/AlertsScreens';
+import { PictureCamera } from '../models/picture-camera.interface';
 
 export default function Home() {
+    let camera: Camera | null;
+
+    const toast = useToast();
     const route = useRoute();
     const navigation = useNavigation();
     const params: any = route.params;
@@ -35,12 +41,14 @@ export default function Home() {
 
     const [mesa, setMesa] = React.useState<Mesa>();
     const [categoria, setCategoria] = React.useState<any>();
-    const [fileCaptura, setFileCaptura] = React.useState<any>(null);
+
+    const [picture, setPicture] = React.useState<PictureCamera>();
 
     React.useEffect(() => {
         console.log('params', params, puntoMuestralId);
         if (!params) return
-        setPuntoMuestralId(params?.puntoMuestralId);
+        if (params?.puntoMuestralId) setPuntoMuestralId(params?.puntoMuestralId);
+        if (params?.photo) setPicture(params.photo);
     }, [params]);
 
     React.useEffect(() => {
@@ -57,16 +65,32 @@ export default function Home() {
 
     React.useEffect(() => {
         console.log('categoria', categoria);
-        if (!categoria) return
         onChangeCategoria(categoria)
-    }, [categoria, mesa]);
+    }, [categoria]);
+
+    React.useEffect(() => { console.log('categorias', categorias); }, [categorias]);
+    React.useEffect(() => { console.log('mesas', mesas); }, [mesas]);
 
     const clearAll = (excepMesa = false) => {
         setMesasCandidatos([]);
         setCategorias([]);
-        setFileCaptura(undefined)
         setCategoria(undefined);
+        setPicture(undefined);
         if (!excepMesa) setMesa(undefined);
+    }
+
+    const askCameraPermission = async (): Promise<boolean> => {
+        console.log('askCameraPermission');
+        if (Platform.OS !== 'web') {
+            const { status } = await Camera.requestPermissionsAsync();
+            console.log('askCameraPermission status', status);
+            if (status !== 'granted') {
+                toast.show({ title: "Sin acceso a la cámara", description: "Para enviar fotos de la planilla debes permitir el acceso a la cámara.", variant: 'left-accent', placement: 'bottom' });
+                return false
+            }
+            return true
+        };
+        return false
     }
 
     const getMesasByPuntoMuestral = async () => {
@@ -102,12 +126,18 @@ export default function Home() {
      * Me creo las nuevas mesasCandidatos que voy a mandar
      */
     const onChangeCategoria = async (c: Categoria) => {
-        console.log('onChangeCategoria');
+        console.log('onChangeCategoria', c);
         if (mesa === undefined) return console.log('mesa === undefined', mesa, mesa === undefined);
+        if (!c) {
+            console.log('categoria not defined', 'setMesasCandidatos to []');
+            return setMesasCandidatos([]);
+        }
 
         let resp: Candidato[] | undefined;
         try {
+            console.log('about to fire that api 1', c);
             resp = await authService.getCandidatosByCategoria(c.id);
+            console.log('about to fire that api 2', c, categoria);
         } catch (error) {
             console.log(error);
             return
@@ -121,10 +151,9 @@ export default function Home() {
 
     /** Estaba desabilitado el botón en la APP v1 Ionic*/
     const onClickFoto = async () => {
-        // this.cameraService.takePictureAndReturnFile()
-        //     .then(
-        //         (f) => this.fileCaptura = f
-        //     )
+        const _permissionGranted: boolean = await askCameraPermission();
+        if (!_permissionGranted) return
+        if (puntoMuestralId) navigation.navigate('PictureFromCamera', { puntoMuestralId });
     }
 
     const onClickConfirmar = async () => {
@@ -137,7 +166,7 @@ export default function Home() {
         let resp: any | undefined;
         try {
             setSpinner(true);
-            resp = await authService.postMesasCandidatos(mesasCandidatos, fileCaptura, mesa, categoria)
+            resp = await authService.postMesasCandidatos(mesasCandidatos, mesa, categoria, picture)
         } catch (error) {
             console.log(error);
             setSpinner(false);
@@ -156,11 +185,18 @@ export default function Home() {
                 <View style={styles.mainBlock}>
                     <Text style={styles.title}>Seleccione mesa y categoria</Text>
 
+                    {/* {categorias.map((elem: Categoria, index: number) =>
+
+                        <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{elem.descripcion}</Text>
+                    )}
+
+                    <Text style={styles.title}>Categoría: {categoria ? `${categoria?.id}` : undefined} / {categoria?.id} / {`${categoria !== undefined}`} / {`${!!categoria}`} / {`${categoria ? categoria.id : undefined}`}</Text> */}
+
                     {/* <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" /> */}
 
                     <View style={styles.selectContainer}>
                         <Select
-                            selectedValue={mesa && `${mesa?.id}`}
+                            selectedValue={mesa ? `${mesa?.id}` : ''}
                             minWidth={200}
                             placeholder="Seleccione una mesa"
                             onValueChange={(itemValue: string) => setMesa(mesas.find((e: Mesa) => `${e.id}` === itemValue))}
@@ -175,10 +211,11 @@ export default function Home() {
 
                     <View style={styles.selectContainer}>
                         <Select
-                            selectedValue={categoria ? `${categoria?.id}` : undefined}
                             minWidth={200}
                             placeholder="Seleccione una categoría"
-                            onValueChange={(itemValue: string) => setCategoria(categorias.find((e: Categoria) => `${e.id}` === itemValue))}
+                            selectedValue={categoria ? `${categoria?.id}` : ''}
+                            defaultValue={undefined}
+                            onValueChange={(itemValue: string) => { console.log('onValueCHange select', itemValue); setCategoria(categorias.find((e: Categoria) => `${e.id}` === itemValue)) }}
                             _selectedItem={{ bg: "cyan.600", endIcon: <CheckIcon size={4} />, }}
                         >
                             {/* {categorias !== '' ? <Select.Item label={'Todos'} value={''} /> : null} */}
@@ -188,62 +225,73 @@ export default function Home() {
                         </Select>
                     </View>
 
-                    <Text style={styles.title}>Ingrese cantidad de votos</Text>
+                    {/* Por una cuestion de timing en las request se dispara primero onChangeCategoria con una categoria precargada
+                    y luego con categoria undefined. El segundo se completa más rapido por no tener una request en el medio y el primero 
+                    se completa después anulando el clear que hizo la segunda llamada. Con este fix casero lo arreglo desde lo visual */}
+                    {categoria &&
+                        <>
+                            <Text style={styles.title}>Ingrese cantidad de votos</Text>
 
-                    {mesasCandidatos.map((elem: MesaCandidato, index: number) => {
-                        const setCantidadVotos = (value: string) => {
-                            const _editedMesaCandidato: MesaCandidato = { ...elem, cantidadVotos: +value };
-                            const _editedMesasCandidatos: MesaCandidato[] = mesasCandidatos.map((e: MesaCandidato) => e.candidato.id === elem.candidato.id ? _editedMesaCandidato : e);
-                            setMesasCandidatos(_editedMesasCandidatos);
-                        };
+                            {mesasCandidatos.map((elem: MesaCandidato, index: number) => {
+                                const setCantidadVotos = (value: string) => {
+                                    const _editedMesaCandidato: MesaCandidato = { ...elem, cantidadVotos: +value };
+                                    let _editedMesasCandidatos: MesaCandidato[] = mesasCandidatos.map((e: MesaCandidato) => e.candidato.id === elem.candidato.id ? _editedMesaCandidato : e);
+                                    // if (index + 1 === mesasCandidatos.length - 1) _editedMesasCandidatos[mesasCandidatos.length - 1].cantidadVotos = +value; /** Copio el anteúltimo en el último */
+                                    setMesasCandidatos(_editedMesasCandidatos);
+                                };
 
-                        return (
-                            <View style={[styles.listaContainer, { backgroundColor: elem.candidato.color }]} key={index}>
-                                <View style={styles.avatarContainer}>
+                                return (
+                                    <View style={[styles.listaContainer, { backgroundColor: elem.candidato.color }]} key={index}>
+                                        <View style={styles.avatarContainer}>
 
-                                    <Avatar
-                                        rounded
-                                        size="medium"
-                                        title={elem.candidato.nombre.substr(0, elem.candidato.nombre.indexOf('-'))}
-                                        titleStyle={{ color: 'black', fontSize: 20, fontWeight: 'bold', }}
-                                        source={{ uri: elem.candidato.urlimagen }}
-                                    />
+                                            <Avatar
+                                                rounded
+                                                size="medium"
+                                                title={elem.candidato.nombre.substr(0, elem.candidato.nombre.indexOf('-'))}
+                                                titleStyle={{ color: 'black', fontSize: 20, fontWeight: 'bold', }}
+                                                source={{ uri: elem.candidato.urlimagen }}
+                                            />
 
-                                    <View style={styles.avatarCenter}>
-                                        <Text style={styles.avatarText1}>{elem.candidato.nombre}</Text>
-                                    </View>
+                                            <View style={styles.avatarCenter}>
+                                                <Text style={styles.avatarText1}>{elem.candidato.nombre}</Text>
+                                            </View>
 
-                                    <View style={styles.avatarRight}>
-                                        <TextInput
-                                            placeholder="0"
-                                            style={styles.inputStyle}
-                                            value={elem.cantidadVotos ? `${elem.cantidadVotos}` : undefined}
-                                            onChangeText={value => setCantidadVotos(value)}
-                                            keyboardType="numeric"
-                                        />
-                                    </View>
+                                            <View style={styles.avatarRight}>
+                                                <TextInput
+                                                    placeholder="0"
+                                                    style={styles.inputStyle}
+                                                    value={elem.cantidadVotos ? `${elem.cantidadVotos}` : undefined}
+                                                    onChangeText={value => setCantidadVotos(value)}
+                                                    keyboardType="numeric"
+                                                />
+                                            </View>
 
-                                </View>
+                                        </View>
 
-                                {/* <View style={{ width: '100%', marginVertical: 5 }}>
+                                        {/* <View style={{ width: '100%', marginVertical: 5 }}>
                                 <LinearProgress color="primary" value={elem.porcentaje / porcentajeMax} variant='determinate' trackColor='#ddd' />
                             </View> */}
-                            </View>
-                        )
-                    })}
+                                    </View>
+                                )
+                            })}
+                        </>
+                    }
 
-                    <Text style={styles.title}>Saque una foto de la planilla {'\n'} (opcional)</Text>
+                    <Text style={[styles.title]}>Saque una foto de la planilla {'\n'} (opcional)</Text>
+
+                    {picture ? <Image source={{ uri: picture.uri }} style={{ minHeight: 400, marginBottom: 20, resizeMode: 'contain' }} /> : null}
 
                     <View style={styles.subContainer}>
                         <Button buttonStyle={styles.cameraButton} disabled={true} icon={<Icon name="camera" size={35} color="white" />} onPress={onClickFoto} />
                     </View>
+
 
                 </View>
 
                 <View style={styles.mainBlock}>
                     <View style={styles.subContainer}>
                         <View style={styles.buttonContainer}>
-                            <Button buttonStyle={styles.buttonStyle} title="Confirmar" disabled={spinner} loading={spinner} onPress={onClickConfirmar} />
+                            <Button buttonStyle={styles.buttonStyle} title="Confirmar" disabled={spinner || !categoria} loading={spinner} onPress={onClickConfirmar} />
                         </View>
                     </View>
                 </View>
@@ -251,7 +299,7 @@ export default function Home() {
                 {/* Use a light status bar on iOS to account for the black space above the modal */}
                 <StatusBar style={Platform.OS === 'ios' ? 'light' : 'auto'} />
             </ScrollView>
-        </View>
+        </View >
     );
 }
 
@@ -262,6 +310,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: '5%',
         paddingTop: '5%',
+        // minHeight: '70%'
     },
     mainBlock: {
         width: '100%',
