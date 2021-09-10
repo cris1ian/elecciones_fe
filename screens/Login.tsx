@@ -85,7 +85,7 @@ export default function Login() {
     };
 
     const onClickTutorial = async () => {
-        let result = await WebBrowser.openBrowserAsync('https://www.youtube.com/watch?v=aYOXFNVpkSc&feature=youtu.be');
+        let result = await WebBrowser.openBrowserAsync('https://youtu.be/eigzO3tavBY');
     };
 
     return (
