@@ -26,11 +26,13 @@ export default function Reports() {
     /** Listas de Datos */
     const [mesas, setMesas] = React.useState<Mesa[]>([]);
     const [categorias, setCategorias] = React.useState<Categoria[]>([]);
+    const [localidades, setLocalidades] = React.useState<string[]>([]);
 
     /** Datos Seleccionados */
-    const [mesasFilter, setMesasFilter] = React.useState<string>('');
-    const [mesa, setMesa] = React.useState<Mesa>();
+    // const [mesasFilter, setMesasFilter] = React.useState<string>('');
+    // const [mesa, setMesa] = React.useState<Mesa>();
     const [categoria, setCategoria] = React.useState<Categoria>();
+    const [localidadSeleccionada, setLocalidadSeleccionada] = React.useState<string>('');
 
     /** Resultados */
     const [resultados, setResultados] = React.useState<Resultado[]>([]);
@@ -45,12 +47,24 @@ export default function Reports() {
     React.useEffect(() => {
         getAllCategorias();
         getAllMesas();
+        getAllLocalidades();
     }, []);
+
+    // React.useEffect(() => {
+    //     if (categorias.length === 0) return console.log('categorias.length === 0', categorias);
+    //     refrescarLista(categoria ? categoria : categorias[0], mesa);
+    // }, [categoria]);
 
     React.useEffect(() => {
         if (categorias.length === 0) return console.log('categorias.length === 0', categorias);
-        refrescarLista(categoria ? categoria : categorias[0], mesa);
-    }, [categoria]);
+        refrescarLista(categoria ? categoria : categorias[0], localidadSeleccionada);
+    }, [categoria, localidadSeleccionada]);
+
+    // React.useEffect(() => {
+    // if (categorias.length === 0) return console.log('categorias.length === 0', categorias);
+    // if (localidades.length === 0) return console.log('localidades.length === 0', localidades);
+    // refrescarLista(categoria ? categoria : categorias[0], localidadSeleccionada);
+    // }, [localidadSeleccionada]);
 
     // React.useEffect(() => {
     //     if (mesas.length === 0) return console.log('mesas.length === 0', mesasFilter);
@@ -58,33 +72,20 @@ export default function Reports() {
     //     debounceCallback();
     // }, [mesasFilter]);
 
-    /** Debounce function for searchbar */
-    // const debounceCallback = () => {
-    //     console.log('debounceCallback',);
-    //     console.log('timerRef PRE', timerRef.current);
+    /** Quedó obsoleto buscar por mesa. Tiene más sentido filtrar por ciudad */
+    // const onClickBuscarPorMesa = (borrarFiltroMesa?: boolean) => {
+    //     console.log('onClickBuscarPorMesa');
+    //     console.log('mesasFilter', mesasFilter,);
+    //     const _mesa: Mesa | undefined = borrarFiltroMesa ? undefined : mesas.find(m => m.descripcion === mesasFilter);
+    //     setMesa(_mesa);
+    //     if (!_mesa && mesasFilter !== '' && !borrarFiltroMesa) return toast.show({ title: "Mesa no encontrada", variant: 'left-accent', placement: 'bottom' });
+    //     if (!borrarFiltroMesa) setEnableSearchButton(false);
+    //     // if (!_mesa && value !== '') return createTwoButtonAlert('Error', `Mesa no encontrada`);
 
-    //     if (timerRef.current) clearTimeout(timerRef.current);
-
-    //     timerRef.current = setTimeout(() => {
-    //         console.log('fired Debounce!');
-    //         onClickBuscarPorMesa()
-    //     }, 400);
-    //     console.log('timerRef POST', timerRef.current);
+    //     console.log('_mesa', _mesa);
+    //     const categoriaDefault: Categoria = categoria ? categoria : categorias[0];
+    //     refrescarLista(categoriaDefault, localidadSeleccionada);
     // }
-
-    const onClickBuscarPorMesa = (borrarFiltroMesa?: boolean) => {
-        console.log('onClickBuscarPorMesa');
-        console.log('mesasFilter', mesasFilter,);
-        const _mesa: Mesa | undefined = borrarFiltroMesa ? undefined : mesas.find(m => m.descripcion === mesasFilter);
-        setMesa(_mesa);
-        if (!_mesa && mesasFilter !== '' && !borrarFiltroMesa) return toast.show({ title: "Mesa no encontrada", variant: 'left-accent', placement: 'bottom' });
-        if (!borrarFiltroMesa) setEnableSearchButton(false);
-        // if (!_mesa && value !== '') return createTwoButtonAlert('Error', `Mesa no encontrada`);
-
-        console.log('_mesa', _mesa);
-        const categoriaDefault: Categoria = categoria ? categoria : categorias[0];
-        refrescarLista(categoriaDefault, _mesa);
-    }
 
     React.useEffect(() => {
         console.log('resultados', resultados);
@@ -123,8 +124,21 @@ export default function Reports() {
         setMesas(resp);
     }
 
-    const refrescarLista = async (_categoria: Categoria, _mesa?: Mesa) => {
-        console.log('refrescarLista', _categoria, _mesa);
+    const getAllLocalidades = async () => {
+        let resp;
+        try {
+            resp = await authService.getAllLocalidades();
+        } catch (error) {
+            console.log(error);
+            return
+        }
+        if (!resp) return;
+        setLocalidades(resp);
+    }
+
+    const refrescarLista = async (_categoria: Categoria, _localidad?: string) => {
+        console.log('refrescarLista', _categoria, _localidad);
+        const _localidadDefinida: boolean = _localidad !== undefined && _localidad !== '';
         let resp: string | undefined;
         try {
             setSpinner(true);
@@ -141,7 +155,7 @@ export default function Reports() {
         let resp2;
         try {
             setSpinner(true);
-            resp2 = await authService.getResultados(_categoria ? _categoria.id : 0, _mesa ? _mesa.id : 0);
+            resp2 = await authService.getResultados(_categoria ? _categoria.id : 0, _localidadDefinida ? _localidad : 0);
         } catch (error) {
             console.log(error);
             setSpinner(false);
@@ -175,6 +189,22 @@ export default function Reports() {
                 </View>
 
                 <View style={styles.selectContainer}>
+                    <Select
+                        minWidth={200}
+                        placeholder="Filtrar por ciudad"
+                        selectedValue={localidadSeleccionada || ''}
+                        onValueChange={(itemValue: string) => setLocalidadSeleccionada(itemValue)}
+                        _selectedItem={{ bg: "cyan.600", endIcon: <CheckIcon size={4} />, }}
+                    >
+                        {/* {categoria !== '' ? <Select.Item label={'Todos'} value={''} /> : null} */}
+                        <Select.Item label={'Todas'} value={''} />
+                        {localidades.map((elem: string, index: number) =>
+                            <Select.Item key={index} label={elem} value={elem} />
+                        )}
+                    </Select>
+                </View>
+
+                {/* <View style={styles.selectContainer}>
                     <SearchBar
                         placeholder="Filtrar por mesa"
                         onChangeText={(value) => { setEnableSearchButton(true); setMesasFilter(value); }}
@@ -187,31 +217,38 @@ export default function Reports() {
                         inputContainerStyle={{ backgroundColor: '#ddd5', }}
                         showLoading={spinner}
                     />
-                </View>
+                </View> */}
 
                 <View style={styles.mesasFilterContainer}>
-                    <Text style={styles.mesasFilter}>{mesasFilter !== '' ? `Mesa ${mesasFilter}` : 'Todas las mesas'}</Text>
+                    {/* <Text style={styles.mesasFilter}>{localidadSeleccionada !== '' ? `${localidadSeleccionada}` : ''}</Text> */}
+
+                    {/* Está solo porque comente el elemento de arriba para no tener que cambiar el display flex */}
+                    <View />
 
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Button buttonStyle={styles.mesasFilterButtonStyle}
+                        {/* <Button buttonStyle={styles.mesasFilterButtonStyle}
                             title="Buscar"
                             disabled={spinner || !enableSearchButton}
                             onPress={() => onClickBuscarPorMesa()}
-                            icon={<Icon name="search" size={15} color="white" style={{ marginRight: 10 }} />} />
+                            icon={<Icon name="search" size={15} color="white" style={{ marginRight: 10 }} />}
+                        /> */}
 
-                        <Button buttonStyle={styles.mesasRefreshButtonStyle}
+                        {/* <Button buttonStyle={styles.mesasRefreshButtonStyle} */}
+                        <Button buttonStyle={styles.mesasFilterButtonStyle}
+                            title="Actualizar"
                             disabled={spinner}
-                            onPress={() => refrescarLista(categoria ? categoria : categorias[0], mesa)}
-                            icon={<Icon name="refresh" size={15} color="white" />} />
+                            onPress={() => refrescarLista(categoria ? categoria : categorias[0], localidadSeleccionada)}
+                            icon={<Icon name="refresh" size={15} color="white" style={{ marginRight: 10 }} />}
+                        />
                     </View>
                 </View>
 
                 <View style={{ minHeight: 10, }}>
-                    {spinner ? <LinearProgress color={"primary"} /> : null}
+                    {spinner ? <LinearProgress color={"primary"} variant='indeterminate' /> : null}
                 </View>
 
 
-                {resultados.length === 0 ? <Text style={styles.title}>Esta mesa todavía no tiene información</Text> : null}
+                {resultados.length === 0 ? <Text style={styles.title}>Aún no hay {'\n'} información cargada</Text> : null}
 
                 {resultados.map((elem: Resultado, index: number) =>
                     <View style={styles.listaContainer} key={index}>
@@ -294,6 +331,7 @@ const styles = StyleSheet.create({
     mesasFilterButtonStyle: {
         borderRadius: 50,
         minWidth: 110,
+        paddingHorizontal: 15,
         // backgroundColor: 'red',
     },
     mesasRefreshButtonStyle: {

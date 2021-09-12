@@ -65,6 +65,7 @@ function MainNavigatorNavigator() {
                 name="Login"
                 component={Login}
                 options={{ title: 'Ingreso', headerTitleAlign: 'center' }}
+                // options={{ title: 'Ingreso', headerTitleAlign: 'center', ...TransitionPresets.SlideFromRightIOS, }}
             />
             <MainNavigator.Screen
                 name="Home"

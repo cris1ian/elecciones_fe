@@ -8,12 +8,12 @@ import { createTwoButtonAlert } from './AlertsScreens';
 export const validarDatos = (mesasCandidatos: MesaCandidato[]): boolean => {
 
     // Primero compruebo que ningun campo sea nulo, o 0, o texto
-    const camposNulos = mesasCandidatos.some((mc: MesaCandidato) => !mc.cantidadVotos || mc.cantidadVotos === 0)
+    // const camposNulos = mesasCandidatos.some((mc: MesaCandidato) => !mc.cantidadVotos || mc.cantidadVotos === 0)
 
-    if (camposNulos) {
-        createTwoButtonAlert('Error', `Falta completar algun campo, o alguno es 0`);
-        return false
-    }
+    // if (camposNulos) {
+    //     createTwoButtonAlert('Error', `Falta completar algun campo, o alguno es 0`);
+    //     return false
+    // }
 
     // RN: Candidato total votos tiene que ser menor o igual a 350
     const candidatoTotalVotos: MesaCandidato | undefined = mesasCandidatos.find(mc => mc.candidato.candidatoTipo === candidatosTipos.TOTAL_VOTOS);
@@ -56,12 +56,20 @@ export const validarDatos = (mesasCandidatos: MesaCandidato[]): boolean => {
         return false
     }
 
-    // RN: Candidato Total Votos Valido tiene que ser <= a Total votos
-    if (candidatoTotalVotosValido.cantidadVotos > candidatoTotalVotos.cantidadVotos) {
-        createTwoButtonAlert('Error', `Total Votos Valido tiene que ser mayor o igual a la suma de los votos de los candidatos`);
+    // RN: Candidato Total Votos Valido tiene que ser <= a Total votos // Esta condición aplicaba en la versión 2019
+    // if (candidatoTotalVotosValido.cantidadVotos > candidatoTotalVotos.cantidadVotos) {
+    //     createTwoButtonAlert('Error', `Total Votos Valido tiene que ser mayor o igual a la suma de los votos de los candidatos`);
+    //     return false;
+    // }
+
+    // RN: Candidato Total Votos Valido tiene que ser = a Total votos. 
+    // En la versión 2021 usamos el campo para rechequear que no le haya errado en la carga
+    // No representa el valor de votos validos y totales sino el mismo campo por duplicado
+    if (candidatoTotalVotosValido.cantidadVotos != candidatoTotalVotos.cantidadVotos) {
+        createTwoButtonAlert('Error', `La cantidad de Votos y Votos(repetir) no coinciden`);
         return false;
     }
-    
+
     // RN: Candidato Total Votos Valido tiene que ser >= a la suma de los votos de los candidatos
     if (candidatoTotalVotosValido.cantidadVotos < sumTotalVotos) {
         createTwoButtonAlert('Error', `Total Votos Valido tiene que ser menor o igual a Total votos`);

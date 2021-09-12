@@ -168,7 +168,7 @@ export const getAllMesas = async (): Promise<Mesa[] | undefined> => {
     const ENDPOINT: string = `${REST_URL}/mesas`;
 
     try {
-        const resp: AxiosResponse<any> = await axios.get(ENDPOINT);
+        const resp: AxiosResponse<Mesa[]> = await axios.get(ENDPOINT);
         console.log(`${ENDPOINT}`, resp);
         return resp.data
     } catch (error) {
@@ -226,5 +226,24 @@ export const getPuntosInformados = async (idCategoria: number): Promise<string |
     //         (resp: any[]) => resp && resp.length > 0 ?
     //             resp[0][''] : ''
     //     )
+    // )
+}
+
+/**
+ * Retorna TODAS las localidades
+ */
+export const getAllLocalidades = async (): Promise<string[] | undefined> => {
+    const ENDPOINT: string = `${REST_URL}/localidad`;
+
+    try {
+        const resp: AxiosResponse<string[]> = await axios.get(ENDPOINT);
+        console.log(`${ENDPOINT}`, resp);
+        return resp.data
+    } catch (error) {
+        return errorCatcher(error)
+    }
+
+    // this.http.get<Mesa[]>(
+    //     `${REST_URL}/mesas`
     // )
 }
