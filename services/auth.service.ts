@@ -21,7 +21,7 @@ export const getCategoriasByMesaAndPuntoMuestral = async (idPuntoMuestral: numbe
         console.log(`${ENDPOINT}`, resp);
         return resp.data
     } catch (error) {
-        return errorCatcher(error)
+        return errorCatcher(error as any)
     }
 
     // this.http.get<Categoria[]>(
@@ -41,7 +41,7 @@ export const getMesasByPuntoMuestral = async (idPuntoMuestral: number): Promise<
         console.log(`${ENDPOINT}`, resp);
         return resp.data
     } catch (error) {
-        return errorCatcher(error)
+        return errorCatcher(error as any)
     }
 
     // this.http.get<Mesa[]>(
@@ -60,7 +60,7 @@ export const getPuntoMuestralByCelular = async (celular: string): Promise<PuntoM
         console.log(`${ENDPOINT}`, resp);
         return resp.data
     } catch (error) {
-        return errorCatcher(error)
+        return errorCatcher(error as any)
     }
 
     // this.http.get<PuntoMuestral[]>(
@@ -79,7 +79,7 @@ export const getCandidatosByCategoria = async (idCategoria: number): Promise<Can
         console.log(`${ENDPOINT}`, resp);
         return resp.data
     } catch (error) {
-        return errorCatcher(error)
+        return errorCatcher(error as any)
     }
 
     // this.http.get<Candidato[]>(
@@ -112,7 +112,7 @@ export const postMesasCandidatos = async (mesasCandidatos: MesaCandidato[], mesa
         console.log(`${ENDPOINT}`, resp);
         return resp.data
     } catch (error) {
-        return errorCatcher(error)
+        return errorCatcher(error as any)
     }
 
     // return {
@@ -132,7 +132,7 @@ export const getResultados = async (idCategoria: any, idMesa: any): Promise<Resu
         const _mappedResp: Resultado[] = resp.data.map((elem: any) => new Resultado(elem));
         return _mappedResp
     } catch (error) {
-        return errorCatcher(error)
+        return errorCatcher(error as any)
     }
 
     // this.http.get<any[]>(
@@ -153,7 +153,7 @@ export const getAllCategorias = async (): Promise<Categoria[] | undefined> => {
         console.log(`${ENDPOINT}`, resp);
         return resp.data
     } catch (error) {
-        return errorCatcher(error)
+        return errorCatcher(error as any)
     }
 
     // this.http.get<Categoria[]>(
@@ -172,7 +172,7 @@ export const getAllMesas = async (): Promise<Mesa[] | undefined> => {
         console.log(`${ENDPOINT}`, resp);
         return resp.data
     } catch (error) {
-        return errorCatcher(error)
+        return errorCatcher(error as any)
     }
 
     // this.http.get<Mesa[]>(
@@ -192,7 +192,7 @@ export const setRegistroIngreso = async (celular: string, newRegistroIngreso: bo
         console.log(`${ENDPOINT}`, resp);
         return resp.data
     } catch (error) {
-        return errorCatcher(error)
+        return errorCatcher(error as any)
     }
 
     // this.http.post(
@@ -216,7 +216,7 @@ export const getPuntosInformados = async (idCategoria: number): Promise<string |
         return firstElem
         // return resp
     } catch (error) {
-        return errorCatcher(error)
+        return errorCatcher(error as any)
     }
 
     // this.http.get(
@@ -239,8 +239,8 @@ export const getAllLocalidades = async (): Promise<string[] | undefined> => {
         const resp: AxiosResponse<string[]> = await axios.get(ENDPOINT);
         console.log(`${ENDPOINT}`, resp);
         return resp.data
-    } catch (error) {
-        return errorCatcher(error)
+    } catch (error ) {
+        return errorCatcher(error as any)
     }
 
     // this.http.get<Mesa[]>(

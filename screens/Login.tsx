@@ -35,6 +35,7 @@ export default function Login() {
         }
         setSpinner(false);
 
+        console.log("onClickReportarPresencia",resp);
         if (resp === undefined) return createTwoButtonAlert('Error', 'El nro de celular ingresado es incorrecto');
         if (!resp || resp.length < 1) return createTwoButtonAlert('Error', 'El nro de celular ingresado es incorrecto');
 
@@ -70,6 +71,7 @@ export default function Login() {
         }
         setSpinner(false);
 
+        console.log("onClickIngresar",resp);
         if (resp === undefined) return createTwoButtonAlert('Error', 'El nro de celular ingresado es incorrecto');
         if (!resp || resp.length < 1) return createTwoButtonAlert('Error', 'El nro de celular ingresado es incorrecto');
 

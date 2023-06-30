@@ -1,6 +1,7 @@
 {
   "expo": {
-    "name": "Elecciones 2021",
+    "name": "Elecciones 2023",
+    "owner": "cris.md5",
     "slug": "elecciones-v2",
     "version": "1.0.6",
     "orientation": "portrait",
@@ -15,9 +16,7 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false,
       "buildNumber": "1.0.6"
@@ -29,6 +28,11 @@
       },
       "package": "com.eon6.eleccionesv2",
       "versionCode": 420010006
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e13d240d-e828-4408-bf17-a08d41a854e0"
+      }
     }
   }
 }
