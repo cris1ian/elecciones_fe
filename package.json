@@ -2,14 +2,14 @@
     "main": "node_modules/expo/AppEntry.js",
     "version": "1.0.6",
     "scripts": {
-        "start": "expo start",
+        "start": "npx expo start",
+        "start:web": " npx serve web-build --single",
         "android": "expo start --android",
         "ios": "expo start --ios",
         "web": "expo start --web",
         "eject": "expo eject",
         "test": "jest --watchAll",
-        "build:android": "expo build:android --type app-bundle",
-        "build:ios": "expo build:ios -t archive",
+        "build:preview": "eas build -p android --profile preview",
         "release": "standard-version"
     },
     "jest": {

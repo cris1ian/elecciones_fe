@@ -277,13 +277,13 @@ export default function Home() {
                         </>
                     }
 
-                    <Text style={[styles.title]}>Saque una foto de la planilla {'\n'} (opcional)</Text>
+                    {/* <Text style={[styles.title]}>Saque una foto de la planilla {'\n'} (opcional)</Text>
 
                     {picture ? <Image source={{ uri: picture.uri }} style={{ minHeight: 400, marginBottom: 20, resizeMode: 'contain' }} /> : null}
 
                     <View style={styles.subContainer}>
                         <Button buttonStyle={styles.cameraButton} disabled={true} icon={<Icon name="camera" size={35} color="white" />} onPress={onClickFoto} />
-                    </View>
+                    </View> */}
 
 
                 </View>
